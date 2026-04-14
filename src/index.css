@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark: #0f1115;
+  --color-dark-card: #181b21;
+  --color-accent: #6d28d9;
+  --color-accent-hover: #5b21b6;
+  --color-glass: rgba(24, 27, 33, 0.6);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+}
+
+@layer base {
+  body {
+    @apply bg-dark text-gray-100 antialiased min-h-screen selection:bg-accent selection:text-white;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-glass backdrop-blur-md border border-glass-border rounded-2xl shadow-xl;
+  }
+  
+  .glass-card {
+    @apply bg-dark-card border border-glass-border rounded-xl shadow-lg transition-transform hover:-translate-y-1 hover:shadow-2xl;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600;
+  }
+}
