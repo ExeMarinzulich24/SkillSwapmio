@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../utils/supabase';
 
 const SkillDetail = () => {
   const { state } = useLocation();
@@ -12,7 +13,7 @@ const SkillDetail = () => {
   const [requestMessage, setRequestMessage] = useState('');
   const [status, setStatus] = useState('idle'); // idle, requesting, success, error
 
-  // In a real app we'd fetch by ID if state is missing
+  // En una app real obtendríamos por ID si falta el estado
   const skill = state?.skill;
 
   if (!skill) {
@@ -32,19 +33,32 @@ const SkillDetail = () => {
     setShowModal(true);
   };
 
-  const submitRequest = () => {
+  const submitRequest = async () => {
     if (!requestMessage.trim()) return;
     setStatus('requesting');
     
-    // Simulate API delay
-    setTimeout(() => {
-      // Mock successful request
+    try {
+      const { error } = await supabase.from('requests').insert([
+        {
+          sender_id: user.id,
+          receiver_id: skill.owner_id,
+          target_skill_id: skill.id,
+          message: requestMessage
+        }
+      ]);
+
+      if (error) throw error;
+      
       setStatus('success');
       setTimeout(() => {
         setShowModal(false);
         navigate('/catalog');
       }, 2000);
-    }, 1000);
+    } catch (err) {
+      console.error(err);
+      setStatus('idle');
+      alert('Hubo un error al enviar la solicitud.');
+    }
   };
 
   return (

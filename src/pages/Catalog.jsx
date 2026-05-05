@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { initialSkills } from '../utils/mockData';
+import { supabase } from '../utils/supabase';
 import { Search, Filter, MapPin, Monitor, Users } from 'lucide-react';
 
 const categoryMap = {
@@ -15,10 +15,28 @@ const categoryMap = {
 };
 
 const Catalog = () => {
-  const [skills, setSkills] = useState(initialSkills);
+  const [skills, setSkills] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchSkills = async () => {
+      const { data, error } = await supabase
+        .from('skills')
+        .select(`
+          *,
+          owner:profiles(id, name, city)
+        `);
+      
+      if (data) {
+        setSkills(data);
+      }
+      setLoading(false);
+    };
+    fetchSkills();
+  }, []);
 
   const handleSearch = (e) => setSearch(e.target.value);
   const handleFilter = (e) => setFilterCategory(e.target.value);

@@ -21,22 +21,22 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Basic Validation
+    // Validación básica
     if (!formData.name || !formData.surname || !formData.email || !formData.password || !formData.city || !formData.category) {
       setError('Por favor, completa todos los campos obligatorios.');
       return;
     }
 
-    // Mock register
-    const success = register(formData);
-    if (success) {
+    try {
+      await register(formData);
       navigate('/dashboard');
-    } else {
-      setError('Error al registrar usuario.');
+    } catch (err) {
+      console.error(err);
+      setError('Error al registrar usuario: ' + (err.message || 'Desconocido'));
     }
   };
 

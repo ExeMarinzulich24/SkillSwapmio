@@ -1,34 +1,114 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../utils/supabase';
 
 const Messages = () => {
   const { id } = useParams(); // request Id
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [messages, setMessages] = useState([
-    { id: 1, text: 'Hola! Vi que aceptaste mi solicitud. ¿Cómo prefieres que nos organicemos?', sender: 'other', time: '10:30 AM' },
-  ]);
+  
+  const [requestDetails, setRequestDetails] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef(null);
 
-  const handleSend = (e) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-    setMessages([...messages, { id: Date.now(), text: newMessage, sender: 'me', time: 'Ahora' }]);
-    setNewMessage('');
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchChatData = async () => {
+      // 1. Get request details
+      const { data: reqData, error: reqError } = await supabase
+        .from('requests')
+        .select(`
+          *,
+          sender:sender_id(id, name),
+          receiver:receiver_id(id, name),
+          target_skill:target_skill_id(title)
+        `)
+        .eq('id', id)
+        .single();
+        
+      if (reqError || !reqData) {
+        console.error("Error fetching request:", reqError);
+        navigate('/dashboard');
+        return;
+      }
+      
+      setRequestDetails(reqData);
+
+      // 2. Get messages
+      const { data: msgData, error: msgError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('request_id', id)
+        .order('created_at', { ascending: true });
+        
+      if (!msgError && msgData) {
+        setMessages(msgData);
+      }
+      
+      setLoading(false);
+      scrollToBottom();
+    };
+
+    fetchChatData();
+  }, [id, user, navigate]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleConfirmCompletion = () => {
-    setIsCompleted(true);
-    // In a real app we'd dispatch to backend
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+    
+    const text = newMessage;
+    setNewMessage('');
+    
+    // Optimistic update
+    const tempMsg = {
+      id: Date.now().toString(),
+      content: text,
+      sender_id: user.id,
+      created_at: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, tempMsg]);
+
+    const { error } = await supabase
+      .from('messages')
+      .insert([{
+        request_id: id,
+        sender_id: user.id,
+        content: text
+      }]);
+      
+    if (error) {
+      console.error("Error sending message:", error);
+      // Revert optimistic update if error
+      setMessages(prev => prev.filter(m => m.id !== tempMsg.id));
+    }
   };
 
   if (!user) {
     return <div className="pt-28 px-6 text-center text-white">Debes iniciar sesión.</div>;
   }
+
+  if (loading) {
+    return <div className="pt-28 px-6 text-center text-gray-400">Cargando chat...</div>;
+  }
+
+  // Determine the "other" user
+  const isSender = requestDetails.sender.id === user.id;
+  const otherUser = isSender ? requestDetails.receiver : requestDetails.sender;
+  const isCompleted = requestDetails.status === 'completed';
 
   return (
     <div className="min-h-screen pt-28 px-6 pb-20 flex justify-center">
@@ -40,50 +120,46 @@ const Messages = () => {
               <ArrowLeft size={20} />
             </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                M
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg shadow-purple-500/30">
+                {otherUser.name.charAt(0)}
               </div>
               <div>
                 <h3 className="text-white font-semibold flex items-center gap-2">
-                  Martín
+                  {otherUser.name}
                   {isCompleted && <span className="bg-green-500/10 text-green-400 text-xs px-2 py-0.5 rounded-full border border-green-500/20">Finalizado</span>}
                 </h3>
-                <p className="text-xs text-gray-400">Intercambio: Clases de Francés</p>
+                <p className="text-xs text-purple-400">Habilidad: {requestDetails.target_skill.title}</p>
               </div>
             </div>
           </div>
-          
-          {!isCompleted && (
-            <button 
-              onClick={handleConfirmCompletion}
-              className="text-sm px-4 py-2 bg-accent/20 hover:bg-accent/40 text-purple-200 rounded-lg transition-colors border border-accent/30 flex items-center gap-2"
-            >
-              <CheckCircle2 size={16} />
-              <span className="hidden sm:inline">Confirmar Intercambio Realizado</span>
-            </button>
-          )}
         </div>
 
         {/* Chat Area */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+          {/* Mensaje inicial de la solicitud */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`max-w-[75%] rounded-2xl p-4 ${requestDetails.sender.id === user.id ? 'bg-accent text-white self-end rounded-tr-sm' : 'bg-dark-card border border-glass-border text-gray-200 self-start rounded-tl-sm'}`}
+          >
+            <p className="italic">Mensaje de solicitud original:</p>
+            <p className="mt-1">"{requestDetails.message}"</p>
+          </motion.div>
+
           {messages.map(msg => (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               key={msg.id} 
-              className={`max-w-[75%] rounded-2xl p-4 ${msg.sender === 'me' ? 'bg-accent text-white self-end rounded-tr-sm' : 'bg-dark-card border border-glass-border text-gray-200 self-start rounded-tl-sm'}`}
+              className={`max-w-[75%] rounded-2xl p-4 ${msg.sender_id === user.id ? 'bg-accent text-white self-end rounded-tr-sm' : 'bg-dark-card border border-glass-border text-gray-200 self-start rounded-tl-sm'}`}
             >
-              <p>{msg.text}</p>
-              <span className={`text-[10px] mt-2 block ${msg.sender === 'me' ? 'text-purple-200' : 'text-gray-500'}`}>{msg.time}</span>
+              <p>{msg.content}</p>
+              <span className={`text-[10px] mt-2 block opacity-70`}>
+                {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              </span>
             </motion.div>
           ))}
-          {isCompleted && (
-            <div className="text-center my-4">
-              <span className="bg-dark-card border border-glass-border rounded-full px-4 py-1 text-xs text-gray-400">
-                El intercambio ha sido marcado como completado
-              </span>
-            </div>
-          )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}

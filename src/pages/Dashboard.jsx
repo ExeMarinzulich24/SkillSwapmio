@@ -3,30 +3,109 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { Plus, Check, X, MessageSquare, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../utils/supabase';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('skills'); // skills, requests_in, requests_out
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [mySkills, setMySkills] = useState([]);
+  const [loadingSkills, setLoadingSkills] = useState(true);
   
-  // Mock requests state
-  const [inRequests, setInRequests] = useState([
-    { id: 1, from: 'Martín', skillOffered: 'Clases de Francés', targetSkill: 'Desarrollo Web con React', status: 'pending' },
-  ]);
+  const [inRequests, setInRequests] = useState([]);
+  const [outRequests, setOutRequests] = useState([]);
 
-  const handlePublishSubmit = (e) => {
-    e.preventDefault();
-    setShowPublishModal(false);
-    // In a real app we would add this to the backend
+  React.useEffect(() => {
+    if (user) {
+      if (activeTab === 'skills') fetchMySkills();
+      if (activeTab === 'requests_in') fetchInRequests();
+      if (activeTab === 'requests_out') fetchOutRequests();
+    }
+  }, [user, activeTab]);
+
+  const fetchInRequests = async () => {
+    const { data, error } = await supabase
+      .from('requests')
+      .select(`
+        id, status, message, created_at,
+        sender:sender_id(name),
+        target_skill:target_skill_id(title)
+      `)
+      .eq('receiver_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (data) setInRequests(data);
   };
 
-  const handleRequestAction = (reqId, action) => {
+  const fetchOutRequests = async () => {
+    const { data, error } = await supabase
+      .from('requests')
+      .select(`
+        id, status, message, created_at,
+        receiver:receiver_id(name),
+        target_skill:target_skill_id(title)
+      `)
+      .eq('sender_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (data) setOutRequests(data);
+  };
+
+  const fetchMySkills = async () => {
+    setLoadingSkills(true);
+    const { data, error } = await supabase
+      .from('skills')
+      .select('*')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (data) {
+      setMySkills(data);
+    }
+    setLoadingSkills(false);
+  };
+
+  const handlePublishSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newSkill = {
+      title: formData.get('title'),
+      description: formData.get('description'),
+      category: formData.get('category'),
+      modality: formData.get('modality'),
+      level: formData.get('level'),
+      availability: formData.get('availability'),
+      owner_id: user.id
+    };
+
+    const { error } = await supabase.from('skills').insert([newSkill]);
+    
+    if (!error) {
+      setShowPublishModal(false);
+      fetchMySkills(); // Refresh list
+    } else {
+      console.error(error);
+      alert('Error al publicar la habilidad');
+    }
+  };
+
+  const handleRequestAction = async (reqId, action) => {
+    const newStatus = action === 'accept' ? 'accepted' : 'rejected';
+    
+    // Update locally first for immediate feedback
     setInRequests(inRequests.map(req => 
-      req.id === reqId ? { ...req, status: action === 'accept' ? 'accepted' : 'rejected' } : req
+      req.id === reqId ? { ...req, status: newStatus } : req
     ));
+
+    // Update in database
+    await supabase
+      .from('requests')
+      .update({ status: newStatus })
+      .eq('id', reqId);
+
     if (action === 'accept') {
-      // Simulate navigate to chat
+      // Navigate to messages
       navigate(`/messages/${reqId}`);
     }
   };
@@ -42,9 +121,10 @@ const Dashboard = () => {
               <div className="absolute top-0 right-0 w-32 h-32 bg-accent/20 rounded-full blur-[40px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
               
               <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl font-bold mb-4 shadow-lg">
-                {user?.name.charAt(0)}
+                {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
               </div>
-              <h2 className="text-xl font-bold text-white">{user?.name} {user?.surname}</h2>
+              <h2 className="text-xl font-bold text-white">{user?.name || 'Usuario'} {user?.surname}</h2>
+              <p className="text-purple-400 text-sm font-medium">{user?.email}</p>
               <p className="text-gray-400 text-sm mb-4">{user?.city}</p>
               
               <button 
@@ -89,21 +169,40 @@ const Dashboard = () => {
               {activeTab === 'skills' && (
                 <motion.div key="skills" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                   <h3 className="text-2xl font-bold text-white mb-6">Mis Habilidades Publicadas</h3>
-                  <div className="glass-card p-8 border border-glass-border border-dashed flex flex-col items-center justify-center text-center">
-                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-gray-400 mb-4">
-                      <Settings size={28} />
+                  {loadingSkills ? (
+                    <div className="glass-card p-8 border border-glass-border border-dashed flex flex-col items-center justify-center text-center">
+                      <p className="text-gray-400">Cargando...</p>
                     </div>
-                    <h4 className="text-white font-medium mb-2">Aún no publicaste ninguna habilidad</h4>
-                    <p className="text-gray-400 text-sm mb-6 max-w-sm">
-                      Comienza a ofrecer tus conocimientos para recibir solicitudes de intercambio.
-                    </p>
-                    <button 
-                      onClick={() => setShowPublishModal(true)}
-                      className="px-6 py-2 bg-accent hover:bg-accent-hover text-white rounded-xl font-medium transition-colors"
-                    >
-                      Crear mi primera publicación
-                    </button>
-                  </div>
+                  ) : mySkills.length === 0 ? (
+                    <div className="glass-card p-8 border border-glass-border border-dashed flex flex-col items-center justify-center text-center">
+                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-gray-400 mb-4">
+                        <Settings size={28} />
+                      </div>
+                      <h4 className="text-white font-medium mb-2">Aún no publicaste ninguna habilidad</h4>
+                      <p className="text-gray-400 text-sm mb-6 max-w-sm">
+                        Comienza a ofrecer tus conocimientos para recibir solicitudes de intercambio.
+                      </p>
+                      <button 
+                        onClick={() => setShowPublishModal(true)}
+                        className="px-6 py-2 bg-accent hover:bg-accent-hover text-white rounded-xl font-medium transition-colors"
+                      >
+                        Crear mi primera publicación
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {mySkills.map(skill => (
+                        <div key={skill.id} className="glass-card p-5">
+                          <h4 className="text-lg font-bold text-white mb-2">{skill.title}</h4>
+                          <p className="text-gray-400 text-sm mb-4 line-clamp-2">{skill.description}</p>
+                          <div className="flex gap-2 text-xs">
+                            <span className="px-2 py-1 bg-purple-500/10 text-purple-300 rounded-md border border-purple-500/20">{skill.category}</span>
+                            <span className="px-2 py-1 bg-white/5 text-gray-300 rounded-md border border-glass-border">{skill.modality}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               )}
 
@@ -115,10 +214,10 @@ const Dashboard = () => {
                       <div key={req.id} className="glass border border-glass-border rounded-xl p-5 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div className="flex-1 text-center md:text-left">
                           <p className="text-gray-300 text-sm mb-1">
-                            <span className="font-semibold text-white">{req.from}</span> quiere aprender <span className="font-semibold text-purple-400">{req.targetSkill}</span>
+                            <span className="font-semibold text-white">{req.sender?.name || 'Alguien'}</span> quiere aprender <span className="font-semibold text-purple-400">{req.target_skill?.title}</span>
                           </p>
                           <p className="text-gray-400 text-sm">
-                            A cambio te ofrece: <span className="text-white">{req.skillOffered}</span>
+                            Mensaje: <span className="text-white">"{req.message}"</span>
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -139,11 +238,22 @@ const Dashboard = () => {
                               </button>
                             </>
                           ) : (
-                            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${
-                              req.status === 'accepted' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
-                            }`}>
-                              {req.status === 'accepted' ? 'Aceptada' : 'Rechazada'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${
+                                req.status === 'accepted' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
+                              }`}>
+                                {req.status === 'accepted' ? 'Aceptada' : 'Rechazada'}
+                              </span>
+                              {req.status === 'accepted' && (
+                                <button 
+                                  onClick={() => navigate(`/messages/${req.id}`)}
+                                  className="p-2 rounded-lg bg-accent/20 text-accent hover:bg-accent/30 transition-colors"
+                                  title="Abrir Chat"
+                                >
+                                  <MessageSquare size={20} />
+                                </button>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -154,10 +264,45 @@ const Dashboard = () => {
 
               {activeTab === 'requests_out' && (
                 <motion.div key="requests_out" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                  <h3 className="text-2xl font-bold text-white mb-6">Mis Solicitudes</h3>
-                  <div className="glass border border-glass-border rounded-xl p-8 text-center">
-                    <p className="text-gray-400">No has enviado ninguna solicitud de intercambio recientemente.</p>
-                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-6">Mis Solicitudes Enviadas</h3>
+                  {outRequests.length === 0 ? (
+                    <div className="glass border border-glass-border rounded-xl p-8 text-center">
+                      <p className="text-gray-400">No has enviado ninguna solicitud de intercambio recientemente.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {outRequests.map(req => (
+                        <div key={req.id} className="glass border border-glass-border rounded-xl p-5 flex flex-col md:flex-row justify-between items-center gap-4">
+                          <div className="flex-1 text-center md:text-left">
+                            <p className="text-gray-300 text-sm mb-1">
+                              Le pediste a <span className="font-semibold text-white">{req.receiver?.name}</span> aprender <span className="font-semibold text-purple-400">{req.target_skill?.title}</span>
+                            </p>
+                            <p className="text-gray-400 text-sm italic">
+                              "{req.message}"
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${
+                              req.status === 'accepted' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
+                              req.status === 'rejected' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
+                              'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                            }`}>
+                              {req.status === 'accepted' ? 'Aceptada' : req.status === 'rejected' ? 'Rechazada' : 'Pendiente'}
+                            </span>
+                            {req.status === 'accepted' && (
+                              <button 
+                                onClick={() => navigate(`/messages/${req.id}`)}
+                                className="p-2 rounded-lg bg-accent/20 text-accent hover:bg-accent/30 transition-colors"
+                                title="Abrir Chat"
+                              >
+                                <MessageSquare size={20} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -192,26 +337,30 @@ const Dashboard = () => {
               <form onSubmit={handlePublishSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">Título de la habilidad</label>
-                  <input type="text" required className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500" placeholder="Ej. Clases de Guitarra" />
+                  <input name="title" type="text" required className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500" placeholder="Ej. Clases de Guitarra" />
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">Descripción</label>
-                  <textarea required className="w-full h-24 bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500 resize-none" placeholder="Describe qué ofreces..." />
+                  <textarea name="description" required className="w-full h-24 bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500 resize-none" placeholder="Describe qué ofreces..." />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Categoría</label>
-                    <select required className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500 appearance-none">
+                    <select name="category" required className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500 appearance-none">
                       <option value="tecnologia">Tecnología</option>
                       <option value="idiomas">Idiomas</option>
                       <option value="arte">Arte y Diseño</option>
+                      <option value="musica">Música</option>
+                      <option value="deportes">Deportes</option>
+                      <option value="oficios">Oficios</option>
+                      <option value="otros">Otros</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Modalidad</label>
-                    <select required className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500 appearance-none">
+                    <select name="modality" required className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500 appearance-none">
                       <option value="virtual">Virtual</option>
                       <option value="presencial">Presencial</option>
                       <option value="hibrido">Híbrido</option>
@@ -222,11 +371,11 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Nivel</label>
-                    <input type="text" required className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500" placeholder="Ej. Básico/Intermedio" />
+                    <input name="level" type="text" required className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500" placeholder="Ej. Básico/Intermedio" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">Disponibilidad</label>
-                    <input type="text" required className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500" placeholder="Ej. Fines de semana" />
+                    <input name="availability" type="text" required className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500" placeholder="Ej. Fines de semana" />
                   </div>
                 </div>
 

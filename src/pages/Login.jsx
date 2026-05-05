@@ -11,7 +11,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
@@ -20,10 +20,11 @@ const Login = () => {
       return;
     }
 
-    const success = login(email, password);
-    if (success) {
+    try {
+      await login(email, password);
       navigate('/dashboard');
-    } else {
+    } catch (err) {
+      console.error(err);
       setError('Email o contraseña incorrectos.');
     }
   };
