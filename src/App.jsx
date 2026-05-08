@@ -9,6 +9,7 @@ import Catalog from './pages/Catalog';
 import SkillDetail from './pages/SkillDetail';
 import Dashboard from './pages/Dashboard';
 import Messages from './pages/Messages';
+import AdminPanel from './pages/AdminPanel';
 import { useAuth } from './context/AuthContext';
 
 // Simple protected route wrapper
@@ -45,6 +46,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <Messages />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute>
+              <AdminPanel />
             </ProtectedRoute>
           } 
         />

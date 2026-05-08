@@ -13,6 +13,8 @@ const SkillDetail = () => {
   const [requestMessage, setRequestMessage] = useState('');
   const [status, setStatus] = useState('idle'); // idle, requesting, success, error
 
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // En una app real obtendríamos por ID si falta el estado
   const skill = state?.skill;
 
@@ -24,6 +26,21 @@ const SkillDetail = () => {
       </div>
     );
   }
+
+  const handleDelete = async () => {
+    if (window.confirm('¿Estás seguro de que deseas borrar esta habilidad? Esta acción no se puede deshacer.')) {
+      setIsDeleting(true);
+      const { error } = await supabase.from('skills').delete().eq('id', skill.id);
+      setIsDeleting(false);
+      
+      if (error) {
+        console.error(error);
+        alert('Hubo un error al borrar la habilidad.');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  };
 
   const handleRequest = () => {
     if (!user) {
@@ -125,13 +142,24 @@ const SkillDetail = () => {
                 </div>
               </div>
 
-              <button 
-                onClick={handleRequest}
-                className="w-full py-4 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl flex justify-center items-center gap-2 transition-all shadow-lg shadow-purple-900/40"
-              >
-                <Send size={18} />
-                Solicitar Intercambio
-              </button>
+              {user && user.id === skill.owner_id ? (
+                <button 
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="w-full py-4 bg-red-600/10 border border-red-500/30 hover:bg-red-600/20 text-red-400 font-semibold rounded-xl flex justify-center items-center gap-2 transition-all"
+                >
+                  <AlertCircle size={18} />
+                  {isDeleting ? 'Borrando...' : 'Borrar Habilidad'}
+                </button>
+              ) : (
+                <button 
+                  onClick={handleRequest}
+                  className="w-full py-4 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl flex justify-center items-center gap-2 transition-all shadow-lg shadow-purple-900/40"
+                >
+                  <Send size={18} />
+                  Solicitar Intercambio
+                </button>
+              )}
             </div>
           </div>
         </motion.div>

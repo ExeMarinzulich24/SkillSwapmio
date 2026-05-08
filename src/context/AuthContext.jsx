@@ -109,6 +109,21 @@ export const AuthProvider = ({ children }) => {
         <div className="min-h-screen pt-24 px-6 flex items-center justify-center text-white text-2xl">
           Conectando con Supabase...
         </div>
+      ) : user?.is_banned ? (
+        <div className="min-h-screen pt-24 px-6 flex flex-col items-center justify-center text-center">
+          <div className="glass p-12 max-w-lg border border-red-500/30 rounded-2xl">
+            <h2 className="text-3xl font-bold text-red-500 mb-4">Cuenta Suspendida</h2>
+            <p className="text-gray-300 mb-8">
+              Tu cuenta ha sido suspendida por un administrador debido a infracciones de los términos de servicio.
+            </p>
+            <button 
+              onClick={logout} 
+              className="px-6 py-3 bg-red-600/20 border border-red-500/30 hover:bg-red-600/40 text-red-400 rounded-xl font-medium transition-colors"
+            >
+              Cerrar Sesión
+            </button>
+          </div>
+        </div>
       ) : (
         children
       )}
