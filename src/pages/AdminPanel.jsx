@@ -12,13 +12,13 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Si no es admin, lo pateamos a la home
-    if (user && user.role !== 'admin') {
+    // Si no es admin ni moderador, lo pateamos a la home
+    if (user && user.role !== 'admin' && user.role !== 'moderator') {
       navigate('/');
       return;
     }
 
-    if (user?.role === 'admin') {
+    if (user?.role === 'admin' || user?.role === 'moderator') {
       fetchUsers();
     }
   }, [user, navigate]);
@@ -37,6 +37,8 @@ const AdminPanel = () => {
     }
     setLoading(false);
   };
+
+  const isMasterAdmin = user?.role === 'admin';
 
   const handleToggleBan = async (userId, currentStatus) => {
     const newStatus = !currentStatus;
@@ -58,7 +60,24 @@ const AdminPanel = () => {
     }
   };
 
-  if (!user || user.role !== 'admin') return null;
+  const handleRoleChange = async (userId, newRole) => {
+    const confirmMessage = `¿Estás seguro de que quieres cambiar el rol de este usuario a ${newRole.toUpperCase()}?`;
+
+    if (window.confirm(confirmMessage)) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (!error) {
+        setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      } else {
+        alert('Error al cambiar el rol del usuario');
+      }
+    }
+  };
+
+  if (!user || (user.role !== 'admin' && user.role !== 'moderator')) return null;
 
   return (
     <div className="min-h-screen pt-28 px-6 pb-20 relative">
@@ -78,10 +97,17 @@ const AdminPanel = () => {
           animate={{ opacity: 1, y: 0 }}
           className="glass-card p-8"
         >
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <UserX size={20} className="text-red-400" />
-            Control de Usuarios
-          </h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <UserX size={20} className="text-red-400" />
+              Control de Usuarios
+            </h2>
+            {isMasterAdmin && (
+              <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs border border-purple-500/30">
+                Modo Maestro Activado
+              </span>
+            )}
+          </div>
 
           {loading ? (
             <p className="text-gray-400 text-center py-8">Cargando usuarios...</p>
@@ -93,6 +119,7 @@ const AdminPanel = () => {
                     <th className="pb-4 text-gray-400 font-medium">Usuario</th>
                     <th className="pb-4 text-gray-400 font-medium">Ubicación</th>
                     <th className="pb-4 text-gray-400 font-medium">Estado</th>
+                    {isMasterAdmin && <th className="pb-4 text-gray-400 font-medium text-center">Rol</th>}
                     <th className="pb-4 text-gray-400 font-medium text-right">Acciones</th>
                   </tr>
                 </thead>
@@ -122,23 +149,42 @@ const AdminPanel = () => {
                           </span>
                         )}
                       </td>
+                      
+                      {isMasterAdmin && (
+                        <td className="py-4 text-center">
+                          <select 
+                            value={u.role || 'user'}
+                            onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                            className="bg-dark/80 border border-glass-border text-sm rounded-lg px-2 py-1 text-gray-300 focus:outline-none focus:border-purple-500"
+                          >
+                            <option value="user">User</option>
+                            <option value="moderator">Moderator</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </td>
+                      )}
+
                       <td className="py-4 text-right">
-                        <button 
-                          onClick={() => handleToggleBan(u.id, u.is_banned)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            u.is_banned 
-                            ? 'bg-gray-700/50 hover:bg-gray-700 text-white' 
-                            : 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20'
-                          }`}
-                        >
-                          {u.is_banned ? 'Levantar Suspensión' : 'Suspender Cuenta'}
-                        </button>
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            onClick={() => handleToggleBan(u.id, u.is_banned)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              u.is_banned 
+                              ? 'bg-gray-700/50 hover:bg-gray-700 text-white' 
+                              : 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20'
+                            }`}
+                          >
+                            {u.is_banned ? 'Levantar Suspensión' : 'Suspender Cuenta'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan="4" className="py-8 text-center text-gray-500">No hay otros usuarios en la plataforma.</td>
+                      <td colSpan={isMasterAdmin ? "5" : "4"} className="py-8 text-center text-gray-500">
+                        No hay otros usuarios en la plataforma.
+                      </td>
                     </tr>
                   )}
                 </tbody>

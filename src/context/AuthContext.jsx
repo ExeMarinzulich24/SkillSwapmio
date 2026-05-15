@@ -59,6 +59,22 @@ export const AuthProvider = ({ children }) => {
         ...authUser,
         ...data,
       });
+    } else if (error && error.code === 'PGRST116') {
+      // PGRST116 is "Results contain 0 rows"
+      // This happens the first time a user logs in via Google
+      const name = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Usuario';
+      const { data: newProfile, error: insertError } = await supabase
+        .from('profiles')
+        .insert([{ id: authUser.id, name: name, city: 'No especificada' }])
+        .select()
+        .single();
+        
+      if (!insertError && newProfile) {
+        setUser({ ...authUser, ...newProfile });
+      } else {
+        console.error("Error creating profile for OAuth user:", insertError);
+        setUser(authUser);
+      }
     } else {
       setUser(authUser);
     }
@@ -97,6 +113,16 @@ export const AuthProvider = ({ children }) => {
     return true;
   };
 
+  const loginWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/dashboard',
+      }
+    });
+    if (error) throw error;
+  };
+
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -104,7 +130,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, loginWithGoogle, register, logout, loading }}>
       {loading ? (
         <div className="min-h-screen pt-24 px-6 flex items-center justify-center text-white text-2xl">
           Conectando con Supabase...

@@ -34,7 +34,7 @@ const Navbar = () => {
 
           {user ? (
             <>
-              {user.role === 'admin' && (
+              {(user.role === 'admin' || user.role === 'moderator') && (
                 <Link to="/admin" className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-2 font-medium">
                   Panel Admin
                 </Link>
@@ -84,7 +84,7 @@ const Navbar = () => {
           <Link to="/catalog" className="px-2 text-gray-300 hover:text-white" onClick={() => setMenuOpen(false)}>Explorar</Link>
           {user ? (
              <>
-               {user.role === 'admin' && (
+               {(user.role === 'admin' || user.role === 'moderator') && (
                  <Link to="/admin" className="px-2 text-red-400 hover:text-red-300 flex items-center gap-2" onClick={() => setMenuOpen(false)}>
                    Panel Admin
                  </Link>
