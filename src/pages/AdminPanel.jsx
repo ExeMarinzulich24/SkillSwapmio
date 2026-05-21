@@ -159,7 +159,6 @@ const AdminPanel = () => {
                           >
                             <option value="user">User</option>
                             <option value="moderator">Moderator</option>
-                            <option value="admin">Admin</option>
                           </select>
                         </td>
                       )}
