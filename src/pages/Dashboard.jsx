@@ -450,6 +450,11 @@ const Dashboard = () => {
       owner_id: user.id
     };
 
+    if (!newSkill.availability || !newSkill.availability.trim()) {
+      alert('Por favor, agenda al menos una fecha y horario de disponibilidad.');
+      return;
+    }
+
     const { error } = await supabase.from('skills').insert([newSkill]);
     
     if (!error) {
@@ -1027,7 +1032,9 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Disponibilidad</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">
+                      Disponibilidad <span className="text-red-400">*</span>
+                    </label>
                     <button 
                       type="button"
                       onClick={handleOpenCalendar}
