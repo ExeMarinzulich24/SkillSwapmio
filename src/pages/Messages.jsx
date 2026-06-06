@@ -16,6 +16,28 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
 
+  const playChatChime = () => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.12);
+    } catch (e) {
+      // Ignorar si el navegador bloquea el audio
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
     
@@ -57,6 +79,48 @@ const Messages = () => {
 
     fetchChatData();
   }, [id, user, navigate]);
+
+  useEffect(() => {
+    if (!user || !id) return;
+
+    const channel = supabase
+      .channel(`chat:${id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `request_id=eq.${id}` },
+        (payload) => {
+          const newMsg = payload.new;
+          
+          if (newMsg.sender_id !== user.id) {
+            playChatChime();
+          }
+
+          setMessages(prev => {
+            const exists = prev.some(m => 
+              m.id === newMsg.id || 
+              (m.sender_id === newMsg.sender_id && 
+               m.content === newMsg.content && 
+               Math.abs(new Date(m.created_at) - new Date(newMsg.created_at)) < 5000)
+            );
+            
+            if (exists) {
+              return prev.map(m => 
+                (m.sender_id === newMsg.sender_id && m.content === newMsg.content && m.id.length < 20) 
+                  ? newMsg 
+                  : m
+              );
+            }
+            
+            return [...prev, newMsg];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, user]);
 
   useEffect(() => {
     scrollToBottom();

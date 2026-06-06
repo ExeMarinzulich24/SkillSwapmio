@@ -40,10 +40,27 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
+    // Evento focus: si el usuario vuelve a la pestaña después de un rato de inactividad,
+    // forzamos la actualización de la sesión y perfil para evitar JWT expirados.
+    const handleFocus = async () => {
+      if (!isMounted) return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await fetchProfile(session.user);
+        }
+      } catch (err) {
+        console.error("Error al refrescar sesión en focus:", err);
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+
     return () => {
       isMounted = false;
       clearTimeout(timeoutId);
       subscription?.unsubscribe();
+      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 
