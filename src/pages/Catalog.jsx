@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabase';
-import { Search, Filter, MapPin, Monitor, Users, Trash2 } from 'lucide-react';
+import { Search, Filter, MapPin, Monitor, Users, Trash2, SlidersHorizontal, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const categoryMap = {
@@ -20,8 +20,21 @@ const Catalog = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
+  const [filterLevel, setFilterLevel] = useState('');
+  const [filterModality, setFilterModality] = useState('');
+  const [filterLocation, setFilterLocation] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const hasActiveFilters = !!(search || filterCategory || filterLevel || filterModality || filterLocation);
+  const handleClearFilters = () => {
+    setSearch('');
+    setFilterCategory('');
+    setFilterLevel('');
+    setFilterModality('');
+    setFilterLocation('');
+  };
 
   useEffect(() => {
     const fetchSkills = async () => {
@@ -29,7 +42,7 @@ const Catalog = () => {
         .from('skills')
         .select(`
           *,
-          owner:profiles(id, name, city)
+          owner:profiles(id, name, city, reviews:reviews!reviewee_id(rating))
         `);
       
       if (data) {
@@ -64,7 +77,12 @@ const Catalog = () => {
     const matchSearch = skill.title.toLowerCase().includes(search.toLowerCase()) || 
                         skill.description.toLowerCase().includes(search.toLowerCase());
     const matchCat = filterCategory ? skill.category === filterCategory : true;
-    return matchSearch && matchCat;
+    const matchLevel = filterLevel ? skill.level === filterLevel : true;
+    const matchModality = filterModality ? skill.modality === filterModality : true;
+    const matchLocation = filterLocation ? (
+      (skill.owner?.city?.toLowerCase() || '').includes(filterLocation.toLowerCase())
+    ) : true;
+    return matchSearch && matchCat && matchLevel && matchModality && matchLocation;
   });
 
   return (
@@ -78,7 +96,7 @@ const Catalog = () => {
             <p className="text-gray-400">Descubre lo que la comunidad tiene para compartir.</p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-stretch sm:items-center">
             <div className="relative w-full sm:w-64">
               <Search size={18} className="absolute left-3 top-[14px] text-gray-500" />
               <input 
@@ -102,8 +120,86 @@ const Catalog = () => {
                 ))}
               </select>
             </div>
+
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border transition-all text-sm font-medium cursor-pointer ${
+                showAdvanced 
+                  ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/30' 
+                  : 'bg-dark/50 border-glass-border text-gray-300 hover:text-white hover:bg-white/5'
+              }`}
+              title="Filtros Avanzados"
+            >
+              <SlidersHorizontal size={16} />
+              <span>Filtros</span>
+            </button>
+
+            {hasActiveFilters && (
+              <button
+                onClick={handleClearFilters}
+                className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer border border-pink-500/20 hover:border-pink-500/30 bg-pink-500/5 rounded-xl"
+              >
+                <X size={14} />
+                <span>Limpiar</span>
+              </button>
+            )}
           </div>
         </div>
+
+        <AnimatePresence>
+          {showAdvanced && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="glass p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border border-glass-border/60 bg-dark/30 rounded-2xl mb-2">
+                {/* Level Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Nivel</label>
+                  <select
+                    value={filterLevel}
+                    onChange={(e) => setFilterLevel(e.target.value)}
+                    className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition-colors cursor-pointer"
+                  >
+                    <option value="">Todos los niveles</option>
+                    <option value="Básico">Básico</option>
+                    <option value="Intermedio">Intermedio</option>
+                    <option value="Avanzado">Avanzado</option>
+                  </select>
+                </div>
+
+                {/* Modality Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Modalidad</label>
+                  <select
+                    value={filterModality}
+                    onChange={(e) => setFilterModality(e.target.value)}
+                    className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition-colors cursor-pointer"
+                  >
+                    <option value="">Todas las modalidades</option>
+                    <option value="virtual">Virtual</option>
+                    <option value="presencial">Presencial</option>
+                    <option value="hibrido">Híbrido</option>
+                  </select>
+                </div>
+
+                {/* Location Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Ubicación (Ciudad)</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Buenos Aires..."
+                    value={filterLocation}
+                    onChange={(e) => setFilterLocation(e.target.value)}
+                    className="w-full bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition-colors"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {filteredSkills.length === 0 ? (
           <div className="text-center py-20 bg-dark-card/50 rounded-2xl border border-glass-border">
@@ -111,15 +207,21 @@ const Catalog = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSkills.map((skill, i) => (
-              <motion.div
-                key={skill.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: i * 0.05 }}
-                className="glass-card flex flex-col p-6 cursor-pointer group relative"
-                onClick={() => navigate(`/skill/${skill.id}`, { state: { skill } })}
-              >
+            {filteredSkills.map((skill, i) => {
+              const ownerReviews = skill.owner?.reviews || [];
+              const avgRating = ownerReviews.length > 0
+                ? (ownerReviews.reduce((sum, r) => sum + r.rating, 0) / ownerReviews.length).toFixed(1)
+                : null;
+
+              return (
+                <motion.div
+                  key={skill.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: i * 0.05 }}
+                  className="glass-card flex flex-col p-6 cursor-pointer group relative"
+                  onClick={() => navigate(`/skill/${skill.id}`, { state: { skill } })}
+                >
                 {user && (user.role === 'admin' || user.role === 'moderator') && (
                   <button
                     onClick={(e) => {
@@ -134,9 +236,16 @@ const Catalog = () => {
                 )}
 
                 <div className={`mb-4 ${user && (user.role === 'admin' || user.role === 'moderator') ? 'pr-8' : ''}`}>
-                  <span className="inline-block px-3 py-1 bg-purple-500/10 text-purple-300 text-xs font-semibold rounded-full border border-purple-500/20 mb-3">
-                    {categoryMap[skill.category] || skill.category}
-                  </span>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <span className="inline-block px-3 py-1 bg-purple-500/10 text-purple-300 text-xs font-semibold rounded-full border border-purple-500/20">
+                      {categoryMap[skill.category] || skill.category}
+                    </span>
+                    {skill.level && (
+                      <span className="inline-block px-3 py-1 bg-pink-500/10 text-pink-300 text-xs font-semibold rounded-full border border-pink-500/20">
+                        {skill.level}
+                      </span>
+                    )}
+                  </div>
                   <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors line-clamp-2">
                     {skill.title}
                   </h3>
@@ -146,10 +255,27 @@ const Catalog = () => {
                   {skill.description}
                 </p>
                 
-                <div className="pt-4 border-t border-glass-border flex flex-col gap-2">
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <Users size={14} className="text-accent"/>
-                    <span>{skill.owner.name}</span>
+                 <div className="pt-4 border-t border-glass-border flex flex-col gap-2">
+                   <div className="flex items-center justify-between text-xs text-gray-400">
+                    <div 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/profile/${skill.owner_id}`);
+                      }}
+                      className="flex items-center gap-2 hover:text-purple-400 transition-colors cursor-pointer group/owner"
+                      title={`Ver perfil de ${skill.owner.name}`}
+                    >
+                      <Users size={14} className="text-accent group-hover/owner:text-purple-400"/>
+                      <span className="font-medium">{skill.owner.name}</span>
+                    </div>
+                    {avgRating ? (
+                      <div className="flex items-center gap-1 text-yellow-400 font-semibold select-none">
+                        <span>★</span>
+                        <span>{avgRating} <span className="text-gray-500 text-[10px] font-normal">({ownerReviews.length})</span></span>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-purple-400 font-semibold bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20 select-none">Nuevo</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-400">
                     <MapPin size={14} className="text-accent"/>
@@ -160,7 +286,8 @@ const Catalog = () => {
                   </div>
                 </div>
               </motion.div>
-            ))}
+            );
+          })}
           </div>
         )}
       </div>

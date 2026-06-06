@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Check, X, MessageSquare, Settings, Calendar, Clock, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Check, X, MessageSquare, Settings, Calendar, Clock, Trash2, ChevronLeft, ChevronRight, Monitor } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabase';
 
@@ -32,6 +32,11 @@ const Dashboard = () => {
   const [reschedulingClass, setReschedulingClass] = useState(null);
   const [newClassDate, setNewClassDate] = useState('');
   const [newClassTime, setNewClassTime] = useState('');
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [ratingClass, setRatingClass] = useState(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   // Profile settings states
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -219,8 +224,9 @@ const Dashboard = () => {
         teacher:teacher_id(name),
         student:student_id(name),
         request:request_id(
-          target_skill:target_skill_id(title)
-        )
+          target_skill:target_skill_id(title, modality)
+        ),
+        reviews(id, rating, comment)
       `)
       .or(`teacher_id.eq.${user.id},student_id.eq.${user.id}`)
       .order('date', { ascending: true });
@@ -263,6 +269,12 @@ const Dashboard = () => {
     e.preventDefault();
     if (!reschedulingClass || !newClassDate || !newClassTime) return;
 
+    const todayStr = formatDateKey(new Date());
+    if (newClassDate < todayStr) {
+      alert('No puedes reprogramar una clase para una fecha anterior a hoy.');
+      return;
+    }
+
     const oldDate = reschedulingClass.date;
     
     const { error } = await supabase
@@ -293,6 +305,148 @@ const Dashboard = () => {
       console.error(error);
       alert('Hubo un error al reprogramar la clase.');
     }
+  };
+
+  const handleCompleteClass = async (classObj) => {
+    if (!window.confirm('¿Estás seguro de que deseas marcar esta clase como finalizada? Esto transferirá 1 crédito de tiempo del alumno al profesor.')) return;
+    
+    try {
+      const { error } = await supabase.rpc('complete_class', { p_class_id: classObj.id });
+      
+      if (error) throw error;
+      
+      alert('Clase finalizada con éxito. Se ha transferido 1 crédito.');
+      
+      if (classObj.student_id === user.id) {
+        setRatingClass(classObj);
+        setReviewRating(5);
+        setReviewComment('');
+        setShowReviewModal(true);
+      }
+      
+      await refreshUser();
+      setSelectedExchangeDate(null);
+      fetchMyClasses();
+    } catch (err) {
+      console.error(err);
+      alert('Hubo un error al completar la clase: ' + (err.message || err.details || ''));
+    }
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!ratingClass || !reviewRating) return;
+    setSubmittingReview(true);
+    
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .insert([{
+          class_id: ratingClass.id,
+          reviewer_id: user.id,
+          reviewee_id: ratingClass.teacher_id,
+          rating: reviewRating,
+          comment: reviewComment
+        }]);
+        
+      if (error) throw error;
+      
+      alert('¡Gracias por calificar la clase!');
+      setShowReviewModal(false);
+      setRatingClass(null);
+      setReviewComment('');
+      fetchMyClasses();
+    } catch (err) {
+      console.error(err);
+      alert('Hubo un error al guardar la calificación: ' + (err.message || ''));
+    }
+    setSubmittingReview(false);
+  };
+
+  const handleDownloadICS = (c) => {
+    const title = c.request?.target_skill?.title || 'Clase de SkillSwap';
+    const partnerName = c.teacher_id === user.id ? c.student?.name : c.teacher?.name;
+    const details = `Clase de SkillSwap con ${partnerName || 'Usuario'}.`;
+    
+    const datePart = c.date; // YYYY-MM-DD
+    let startTime = '09:00';
+    let endTime = '10:00';
+    
+    if (c.time) {
+      const parts = c.time.split(/\s*-\s*/);
+      if (parts[0]) startTime = parts[0].trim();
+      if (parts[1]) endTime = parts[1].trim();
+      else {
+        const [h, m] = startTime.split(':').map(Number);
+        endTime = `${String((h + 1) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+    }
+    
+    const cleanDate = datePart.replace(/-/g, ''); // YYYYMMDD
+    const cleanStart = startTime.replace(/:/g, '') + '00'; // HHMMSS
+    const cleanEnd = endTime.replace(/:/g, '') + '00'; // HHMMSS
+    
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//SkillSwap//Class Calendar//ES',
+      'BEGIN:VEVENT',
+      `UID:${c.id}@skillswap.com`,
+      `DTSTAMP:${cleanDate}T000000Z`,
+      `DTSTART:${cleanDate}T${cleanStart}`,
+      `DTEND:${cleanDate}T${cleanEnd}`,
+      `SUMMARY:${title}`,
+      `DESCRIPTION:${details}`,
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+    
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `clase_skillswap_${c.id}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const getGoogleCalendarUrl = (c) => {
+    const title = c.request?.target_skill?.title || 'Clase de SkillSwap';
+    const partnerName = c.teacher_id === user.id ? c.student?.name : c.teacher?.name;
+    const details = `Clase de SkillSwap con ${partnerName || 'Usuario'}.`;
+    const location = c.request?.target_skill?.modality === 'virtual' || c.request?.target_skill?.modality === 'hibrido'
+      ? `https://meet.jit.si/SkillSwap_Class_${c.id}`
+      : 'Presencial';
+
+    const datePart = c.date; // YYYY-MM-DD
+    let startTime = '09:00';
+    let endTime = '10:00';
+    
+    if (c.time) {
+      const parts = c.time.split(/\s*-\s*/);
+      if (parts[0]) startTime = parts[0].trim();
+      if (parts[1]) endTime = parts[1].trim();
+      else {
+        const [h, m] = startTime.split(':').map(Number);
+        endTime = `${String((h + 1) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+    }
+    
+    const padTime = (t) => {
+      const [h, m] = t.split(':').map(Number);
+      return `${String(h).padStart(2, '0')}${String(m).padStart(2, '0')}00`;
+    };
+
+    const cleanDate = datePart.replace(/-/g, ''); // YYYYMMDD
+    const cleanStart = padTime(startTime);
+    const cleanEnd = padTime(endTime);
+    
+    const dates = `${cleanDate}T${cleanStart}/${cleanDate}T${cleanEnd}`;
+    
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dates}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
   };
 
   const searchLocation = async (query) => {
@@ -552,7 +706,12 @@ const Dashboard = () => {
               </div>
               <h2 className="text-xl font-bold text-white">{user?.name || 'Usuario'} {user?.surname || ''}</h2>
               <p className="text-purple-400 text-sm font-medium">{user?.email}</p>
-              <p className="text-gray-400 text-sm mb-4">{user?.city}</p>
+              <p className="text-gray-400 text-sm mb-3">{user?.city}</p>
+              
+              <div className="flex items-center justify-center gap-1.5 bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-semibold px-3 py-1.5 rounded-full w-fit mx-auto mb-4 select-none">
+                <Clock size={12} className="text-purple-400" />
+                <span>{user?.time_credits ?? 5} Créditos de Tiempo</span>
+              </div>
               
               <button 
                 onClick={() => setShowPublishModal(true)}
@@ -882,11 +1041,13 @@ const Dashboard = () => {
                                           <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                                             c.status === 'cancelled'
                                               ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                              : c.status === 'rescheduled'
-                                                ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                                                : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                              : c.status === 'completed'
+                                                ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                                : c.status === 'rescheduled'
+                                                  ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+                                                  : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                                           }`}>
-                                            {c.status === 'cancelled' ? 'Cancelada' : c.status === 'rescheduled' ? 'Reprogramada' : 'Agendada'}
+                                            {c.status === 'cancelled' ? 'Cancelada' : c.status === 'completed' ? 'Completada' : c.status === 'rescheduled' ? 'Reprogramada' : 'Agendada'}
                                           </span>
                                         </div>
 
@@ -899,26 +1060,92 @@ const Dashboard = () => {
                                           </p>
                                         </div>
 
-                                        {c.status !== 'cancelled' && (
-                                          <div className="flex gap-2 pt-2">
+                                        {c.status !== 'cancelled' && c.status !== 'completed' && (c.request?.target_skill?.modality === 'virtual' || c.request?.target_skill?.modality === 'hibrido') && (
+                                          <div className="pt-2">
+                                            <a
+                                              href={`https://meet.jit.si/SkillSwap_Class_${c.id}`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-bold rounded-lg transition-colors flex justify-center items-center gap-1.5 cursor-pointer shadow-lg shadow-purple-500/20 text-center"
+                                            >
+                                              <Monitor size={14} /> Entrar al Aula Virtual
+                                            </a>
+                                          </div>
+                                        )}
+
+                                        {c.status !== 'cancelled' && c.status !== 'completed' && (
+                                          <div className="pt-2">
+                                            <a
+                                              href={getGoogleCalendarUrl(c)}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="w-full py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 hover:border-blue-500/50 text-blue-300 text-xs font-bold rounded-lg transition-colors flex justify-center items-center gap-1.5 cursor-pointer text-center shadow-lg shadow-blue-500/10"
+                                            >
+                                              <Calendar size={14} /> Añadir a Google Calendar
+                                            </a>
+                                          </div>
+                                        )}
+
+                                        {c.status !== 'cancelled' && c.status !== 'completed' && (
+                                          <div className="flex flex-col gap-2 pt-2">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleCompleteClass(c)}
+                                              className="w-full py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-300 text-xs font-bold rounded-lg transition-colors border border-green-500/20 cursor-pointer text-center"
+                                            >
+                                              Marcar como Completada
+                                            </button>
+                                            <div className="flex gap-2">
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  setReschedulingClass(c);
+                                                  setNewClassDate(c.date);
+                                                  setNewClassTime(c.time);
+                                                }}
+                                                className="flex-1 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 text-xs font-semibold rounded-lg transition-colors border border-yellow-500/20 cursor-pointer text-center"
+                                              >
+                                                Reprogramar
+                                              </button>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleCancelClass(c)}
+                                                className="flex-1 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-300 text-xs font-semibold rounded-lg transition-colors border border-red-500/20 cursor-pointer text-center"
+                                              >
+                                                Cancelar
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {c.status === 'completed' && c.student_id === user.id && (!c.reviews || c.reviews.length === 0) && (
+                                          <div className="pt-2">
                                             <button
                                               type="button"
                                               onClick={() => {
-                                                setReschedulingClass(c);
-                                                setNewClassDate(c.date);
-                                                setNewClassTime(c.time);
+                                                setRatingClass(c);
+                                                setReviewRating(5);
+                                                setReviewComment('');
+                                                setShowReviewModal(true);
                                               }}
-                                              className="flex-1 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 text-xs font-semibold rounded-lg transition-colors border border-yellow-500/20 cursor-pointer text-center"
+                                              className="w-full py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-semibold rounded-lg transition-colors shadow-lg shadow-purple-900/40 cursor-pointer text-center"
                                             >
-                                              Reprogramar
+                                              Dejar Calificación
                                             </button>
-                                            <button
-                                              type="button"
-                                              onClick={() => handleCancelClass(c)}
-                                              className="flex-1 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-300 text-xs font-semibold rounded-lg transition-colors border border-red-500/20 cursor-pointer text-center"
-                                            >
-                                              Cancelar
-                                            </button>
+                                          </div>
+                                        )}
+
+                                        {c.status === 'completed' && c.reviews && c.reviews.length > 0 && (
+                                          <div className="pt-2 flex flex-col gap-1 text-[11px] text-gray-400 bg-white/5 border border-glass-border/30 rounded-lg p-2">
+                                            <div className="flex items-center gap-1">
+                                              <span className="font-semibold text-gray-300">Tu Calificación:</span>
+                                              <span className="text-yellow-400 font-bold flex items-center">
+                                                {"★".repeat(c.reviews[0].rating)}{"☆".repeat(5 - c.reviews[0].rating)} ({c.reviews[0].rating}/5)
+                                              </span>
+                                            </div>
+                                            {c.reviews[0].comment && (
+                                              <p className="italic text-gray-400 mt-0.5">"{c.reviews[0].comment}"</p>
+                                            )}
                                           </div>
                                         )}
                                       </div>
@@ -1307,6 +1534,7 @@ const Dashboard = () => {
                   <input 
                     type="date" 
                     required 
+                    min={formatDateKey(new Date())}
                     value={newClassDate} 
                     onChange={(e) => setNewClassDate(e.target.value)} 
                     className="w-full bg-dark/50 border border-glass-border rounded-xl py-2 px-3 text-white text-sm focus:outline-none focus:border-purple-500"
@@ -1533,6 +1761,102 @@ const Dashboard = () => {
                     className="flex-1 py-3 bg-accent hover:bg-accent-hover disabled:bg-accent/50 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-purple-900/40 cursor-pointer text-sm"
                   >
                     {savingSettings ? 'Guardando...' : 'Guardar Ajustes'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Review Modal */}
+      <AnimatePresence>
+        {showReviewModal && ratingClass && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-dark/95 backdrop-blur-sm"
+              onClick={() => !submittingReview && setShowReviewModal(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="glass-card w-full max-w-md p-6 relative z-10"
+            >
+              <div className="flex justify-between items-center mb-4 border-b border-glass-border pb-3">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  Calificar Intercambio
+                </h3>
+                <button 
+                  onClick={() => setShowReviewModal(false)} 
+                  disabled={submittingReview}
+                  className="text-gray-400 hover:text-white p-1 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleReviewSubmit} className="space-y-5">
+                <div className="text-xs text-gray-400 space-y-1 bg-dark/30 border border-glass-border/40 p-3 rounded-xl">
+                  <p><strong className="text-gray-300">Profesor:</strong> {ratingClass.teacher?.name}</p>
+                  <p><strong className="text-gray-300">Habilidad:</strong> {ratingClass.request?.target_skill?.title}</p>
+                </div>
+
+                <div className="text-center space-y-2">
+                  <label className="block text-sm font-medium text-gray-300">¿Cómo calificarías la clase?</label>
+                  <div className="flex justify-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        className={`text-2xl transition-all duration-150 cursor-pointer ${
+                          star <= reviewRating 
+                            ? 'text-yellow-400 scale-110 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' 
+                            : 'text-gray-600 hover:text-yellow-500'
+                        }`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-xs text-purple-400 font-semibold">
+                    {reviewRating === 1 && "Muy insatisfecho"}
+                    {reviewRating === 2 && "Insatisfecho"}
+                    {reviewRating === 3 && "Aceptable"}
+                    {reviewRating === 4 && "Muy bueno"}
+                    {reviewRating === 5 && "¡Excelente experiencia!"}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Comentario / Reseña (Opcional)</label>
+                  <textarea 
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="Cuéntanos qué tal fue la explicación, el trato, etc..."
+                    className="w-full h-24 bg-dark/50 border border-glass-border rounded-xl py-3 px-4 text-white text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-3">
+                  <button 
+                    type="button" 
+                    disabled={submittingReview}
+                    onClick={() => setShowReviewModal(false)}
+                    className="flex-grow py-2.5 text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors font-medium border border-glass-border cursor-pointer text-sm"
+                  >
+                    Omitir
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={submittingReview}
+                    className="flex-grow py-2.5 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-purple-900/40 cursor-pointer text-sm"
+                  >
+                    {submittingReview ? 'Guardando...' : 'Enviar Calificación'}
                   </button>
                 </div>
               </form>

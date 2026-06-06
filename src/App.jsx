@@ -10,6 +10,7 @@ import SkillDetail from './pages/SkillDetail';
 import Dashboard from './pages/Dashboard';
 import Messages from './pages/Messages';
 import AdminPanel from './pages/AdminPanel';
+import PublicProfile from './pages/PublicProfile';
 import { useAuth } from './context/AuthContext';
 import Footer from './components/layout/Footer';
 
@@ -33,6 +34,7 @@ const AppRoutes = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/skill/:id" element={<SkillDetail />} />
+          <Route path="/profile/:id" element={<PublicProfile />} />
           
           {/* Protected Routes */}
           <Route 

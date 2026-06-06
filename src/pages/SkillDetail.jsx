@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, AlertCircle, Clock, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../utils/supabase';
 
@@ -14,9 +14,31 @@ const SkillDetail = () => {
   const [status, setStatus] = useState('idle'); // idle, requesting, success, error
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [ownerReviews, setOwnerReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
 
-  // En una app real obtendríamos por ID si falta el estado
   const skill = state?.skill;
+
+  React.useEffect(() => {
+    if (!skill) return;
+    const fetchOwnerReviews = async () => {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*, reviewer:profiles!reviewer_id(name, avatar_url)')
+        .eq('reviewee_id', skill.owner_id)
+        .order('created_at', { ascending: false });
+      
+      if (data) {
+        setOwnerReviews(data);
+      }
+      setLoadingReviews(false);
+    };
+    fetchOwnerReviews();
+  }, [skill?.owner_id]);
+
+  const avgRating = ownerReviews.length > 0
+    ? (ownerReviews.reduce((sum, r) => sum + r.rating, 0) / ownerReviews.length).toFixed(1)
+    : null;
 
   if (!skill) {
     return (
@@ -46,6 +68,10 @@ const SkillDetail = () => {
   const handleRequest = () => {
     if (!user) {
       navigate('/login');
+      return;
+    }
+    if (user.time_credits !== undefined && user.time_credits <= 0) {
+      alert('No tienes suficientes créditos de tiempo. Por favor, ofrece e imparte una clase para ganar créditos y poder solicitar intercambios.');
       return;
     }
     setShowModal(true);
@@ -106,12 +132,26 @@ const SkillDetail = () => {
                 {skill.title}
               </h1>
               
-              <div className="flex items-center gap-4 mb-8 pb-8 border-b border-glass-border">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white text-lg font-bold shadow-lg shadow-purple-500/30">
+              <div 
+                onClick={() => navigate(`/profile/${skill.owner_id}`)}
+                className="flex items-center gap-4 mb-8 pb-8 border-b border-glass-border cursor-pointer group/owner"
+                title={`Ver perfil de ${skill.owner.name}`}
+              >
+                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white text-lg font-bold shadow-lg shadow-purple-500/30 group-hover/owner:scale-105 transition-transform">
                   {skill.owner.name.charAt(0)}
                 </div>
                 <div>
-                  <h3 className="text-white font-medium">{skill.owner.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-white font-medium group-hover/owner:text-purple-400 transition-colors">{skill.owner.name}</h3>
+                    {avgRating ? (
+                      <div className="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-semibold px-2 py-0.5 rounded-full select-none">
+                        <span>★</span>
+                        <span>{avgRating} ({ownerReviews.length})</span>
+                      </div>
+                    ) : (
+                      <span className="bg-purple-500/10 border border-purple-500/20 text-purple-300 text-[10px] font-semibold px-2 py-0.5 rounded-full select-none">Nuevo</span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-400">{skill.owner.city}</p>
                 </div>
               </div>
@@ -120,6 +160,43 @@ const SkillDetail = () => {
                 <div>
                   <h4 className="text-white font-semibold mb-2 text-lg">Descripción</h4>
                   <p className="text-gray-300 leading-relaxed">{skill.description}</p>
+                </div>
+
+                <div className="pt-6 border-t border-glass-border">
+                  <h4 className="text-white font-semibold mb-4 text-lg">Valoraciones de la Comunidad</h4>
+                  {loadingReviews ? (
+                    <p className="text-gray-500 text-sm italic">Cargando valoraciones...</p>
+                  ) : ownerReviews.length === 0 ? (
+                    <p className="text-gray-500 text-sm italic">Este mentor aún no ha recibido valoraciones.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {ownerReviews.map((rev) => (
+                        <div key={rev.id} className="bg-white/5 border border-glass-border/40 rounded-xl p-4 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full overflow-hidden border border-glass-border bg-dark/30 flex items-center justify-center text-[10px] font-bold text-white">
+                                {rev.reviewer?.avatar_url ? (
+                                  <img src={rev.reviewer.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : (
+                                  rev.reviewer?.name?.charAt(0) || 'U'
+                                )}
+                              </div>
+                              <span className="text-white font-medium text-xs">{rev.reviewer?.name || 'Usuario'}</span>
+                            </div>
+                            <div className="flex text-yellow-400 text-xs">
+                              {"★".repeat(rev.rating)}{"☆".repeat(5 - rev.rating)}
+                            </div>
+                          </div>
+                          {rev.comment && (
+                            <p className="text-gray-300 text-xs italic">"{rev.comment}"</p>
+                          )}
+                          <p className="text-[10px] text-gray-500 text-right">
+                            {new Date(rev.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
