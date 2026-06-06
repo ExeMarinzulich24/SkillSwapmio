@@ -41,13 +41,21 @@ export const AuthProvider = ({ children }) => {
     });
 
     // Evento focus: si el usuario vuelve a la pestaña después de un rato de inactividad,
-    // forzamos la actualización de la sesión y perfil para evitar JWT expirados.
+    // forzamos la actualización de la sesión y perfil únicamente si el JWT está próximo a expirar (< 5 minutos).
     const handleFocus = async () => {
       if (!isMounted) return;
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          await fetchProfile(session.user);
+        if (!session) return;
+        
+        const expiresAt = session.expires_at; // unix timestamp en segundos
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        if (expiresAt - currentTime < 300) {
+          const { data: { user: refreshedUser } } = await supabase.auth.getUser();
+          if (refreshedUser) {
+            await fetchProfile(refreshedUser);
+          }
         }
       } catch (err) {
         console.error("Error al refrescar sesión en focus:", err);

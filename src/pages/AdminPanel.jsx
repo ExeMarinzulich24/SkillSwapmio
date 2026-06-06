@@ -10,6 +10,7 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
     // Si no es admin ni moderador, lo pateamos a la home
@@ -18,10 +19,11 @@ const AdminPanel = () => {
       return;
     }
 
-    if (user?.role === 'admin' || user?.role === 'moderator') {
+    if (user && (user.role === 'admin' || user.role === 'moderator') && !hasFetched) {
       fetchUsers();
+      setHasFetched(true);
     }
-  }, [user, navigate]);
+  }, [user, navigate, hasFetched]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -119,7 +121,7 @@ const AdminPanel = () => {
                     <th className="pb-4 text-gray-400 font-medium">Usuario</th>
                     <th className="pb-4 text-gray-400 font-medium">Ubicación</th>
                     <th className="pb-4 text-gray-400 font-medium">Estado</th>
-                    {isMasterAdmin && <th className="pb-4 text-gray-400 font-medium text-center">Rol</th>}
+                    <th className="pb-4 text-gray-400 font-medium text-center">Rol</th>
                     <th className="pb-4 text-gray-400 font-medium text-right">Acciones</th>
                   </tr>
                 </thead>
@@ -150,18 +152,16 @@ const AdminPanel = () => {
                         )}
                       </td>
                       
-                      {isMasterAdmin && (
-                        <td className="py-4 text-center">
-                          <select 
-                            value={u.role || 'user'}
-                            onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                            className="bg-dark/80 border border-glass-border text-sm rounded-lg px-2 py-1 text-gray-300 focus:outline-none focus:border-purple-500"
-                          >
-                            <option value="user">User</option>
-                            <option value="moderator">Moderator</option>
-                          </select>
-                        </td>
-                      )}
+                      <td className="py-4 text-center">
+                        <select 
+                          value={u.role || 'user'}
+                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                          className="bg-dark/80 border border-glass-border text-sm rounded-lg px-2 py-1 text-gray-300 focus:outline-none focus:border-purple-500"
+                        >
+                          <option value="user">User</option>
+                          <option value="moderator">Moderator</option>
+                        </select>
+                      </td>
 
                       <td className="py-4 text-right">
                         <div className="flex justify-end gap-2">
@@ -181,7 +181,7 @@ const AdminPanel = () => {
                   ))}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan={isMasterAdmin ? "5" : "4"} className="py-8 text-center text-gray-500">
+                      <td colSpan="5" className="py-8 text-center text-gray-500">
                         No hay otros usuarios en la plataforma.
                       </td>
                     </tr>
