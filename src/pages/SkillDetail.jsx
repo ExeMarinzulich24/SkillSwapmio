@@ -37,7 +37,8 @@ const SkillDetail = () => {
         console.error(error);
         alert('Hubo un error al borrar la habilidad.');
       } else {
-        navigate('/dashboard');
+        alert('Publicación borrada con éxito.');
+        navigate(user.id === skill.owner_id ? '/dashboard' : '/catalog');
       }
     }
   };
@@ -142,7 +143,7 @@ const SkillDetail = () => {
                 </div>
               </div>
 
-              {user && user.id === skill.owner_id ? (
+              {user && (user.id === skill.owner_id || user.role === 'admin' || user.role === 'moderator') ? (
                 <button 
                   onClick={handleDelete}
                   disabled={isDeleting}

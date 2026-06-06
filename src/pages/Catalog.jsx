@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabase';
-import { Search, Filter, MapPin, Monitor, Users } from 'lucide-react';
+import { Search, Filter, MapPin, Monitor, Users, Trash2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const categoryMap = {
   tecnologia: 'Tecnología',
@@ -20,6 +21,7 @@ const Catalog = () => {
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchSkills = async () => {
@@ -40,6 +42,23 @@ const Catalog = () => {
 
   const handleSearch = (e) => setSearch(e.target.value);
   const handleFilter = (e) => setFilterCategory(e.target.value);
+
+  const handleDeleteSkill = async (skillId) => {
+    if (window.confirm('¿Estás seguro de que deseas borrar esta publicación? Como moderador esta acción es permanente.')) {
+      const { error } = await supabase
+        .from('skills')
+        .delete()
+        .eq('id', skillId);
+      
+      if (!error) {
+        setSkills(skills.filter(s => s.id !== skillId));
+        alert('Publicación borrada con éxito.');
+      } else {
+        console.error(error);
+        alert('Error al borrar la publicación.');
+      }
+    }
+  };
 
   const filteredSkills = skills.filter((skill) => {
     const matchSearch = skill.title.toLowerCase().includes(search.toLowerCase()) || 
@@ -98,10 +117,23 @@ const Catalog = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.05 }}
-                className="glass-card flex flex-col p-6 cursor-pointer group"
+                className="glass-card flex flex-col p-6 cursor-pointer group relative"
                 onClick={() => navigate(`/skill/${skill.id}`, { state: { skill } })}
               >
-                <div className="mb-4">
+                {user && (user.role === 'admin' || user.role === 'moderator') && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSkill(skill.id);
+                    }}
+                    className="absolute top-4 right-4 p-2 bg-red-600/10 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors border border-red-500/20 hover:border-red-500/40 z-10"
+                    title="Eliminar publicación"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+
+                <div className={`mb-4 ${user && (user.role === 'admin' || user.role === 'moderator') ? 'pr-8' : ''}`}>
                   <span className="inline-block px-3 py-1 bg-purple-500/10 text-purple-300 text-xs font-semibold rounded-full border border-purple-500/20 mb-3">
                     {categoryMap[skill.category] || skill.category}
                   </span>
