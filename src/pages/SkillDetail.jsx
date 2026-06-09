@@ -6,9 +6,13 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../utils/supabase';
 
 const SkillDetail = () => {
+  const { id } = useParams();
   const { state } = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  const [skill, setSkill] = useState(state?.skill || null);
+  const [loadingSkill, setLoadingSkill] = useState(!state?.skill || !state?.skill?.owner);
   const [showModal, setShowModal] = useState(false);
   const [requestMessage, setRequestMessage] = useState('');
   const [status, setStatus] = useState('idle'); // idle, requesting, success, error
@@ -17,7 +21,37 @@ const SkillDetail = () => {
   const [ownerReviews, setOwnerReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
 
-  const skill = state?.skill;
+  React.useEffect(() => {
+    const fetchSkillData = async () => {
+      if (state?.skill && state?.skill?.owner) {
+        setSkill(state.skill);
+        setLoadingSkill(false);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('skills')
+          .select(`
+            *,
+            owner:profiles(id, name, city, reviews:reviews!reviewee_id(rating))
+          `)
+          .eq('id', id)
+          .single();
+          
+        if (error) throw error;
+        if (data) {
+          setSkill(data);
+        }
+      } catch (err) {
+        console.error("Error loading skill detail:", err);
+      } finally {
+        setLoadingSkill(false);
+      }
+    };
+    
+    fetchSkillData();
+  }, [id, state?.skill]);
 
   React.useEffect(() => {
     if (!skill) return;
@@ -40,9 +74,17 @@ const SkillDetail = () => {
     ? (ownerReviews.reduce((sum, r) => sum + r.rating, 0) / ownerReviews.length).toFixed(1)
     : null;
 
+  if (loadingSkill) {
+    return (
+      <div className="min-h-screen pt-28 px-6 flex items-center justify-center text-white text-2xl">
+        Cargando detalles de la habilidad...
+      </div>
+    );
+  }
+
   if (!skill) {
     return (
-      <div className="min-h-screen pt-28 px-6 flex flex-col items-center">
+      <div className="min-h-screen pt-28 px-6 flex flex-col items-center justify-center">
         <h2 className="text-2xl text-white mb-4">Habilidad no encontrada</h2>
         <button onClick={() => navigate('/catalog')} className="text-purple-400 hover:text-purple-300">Volver al catálogo</button>
       </div>
