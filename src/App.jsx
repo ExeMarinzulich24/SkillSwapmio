@@ -13,7 +13,6 @@ import Messages from './pages/Messages';
 import AdminPanel from './pages/AdminPanel';
 import PublicProfile from './pages/PublicProfile';
 import { useAuth } from './context/AuthContext';
-import Footer from './components/layout/Footer';
 
 // Simple protected route wrapper
 const ProtectedRoute = ({ children }) => {
