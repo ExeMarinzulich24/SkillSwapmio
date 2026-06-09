@@ -11,7 +11,9 @@ import SkillDetail from './pages/SkillDetail';
 import Dashboard from './pages/Dashboard';
 import Messages from './pages/Messages';
 import AdminPanel from './pages/AdminPanel';
+import PublicProfile from './pages/PublicProfile';
 import { useAuth } from './context/AuthContext';
+import Footer from './components/layout/Footer';
 
 // Simple protected route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -24,46 +26,47 @@ const ProtectedRoute = ({ children }) => {
 
 const AppRoutes = () => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow">
+      <div className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/skill/:id" element={<SkillDetail />} />
-          
+          <Route path="/profile/:id" element={<PublicProfile />} />
+
           {/* Protected Routes */}
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/messages/:id" 
+          <Route
+            path="/messages/:id"
             element={
               <ProtectedRoute>
                 <Messages />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/admin" 
+          <Route
+            path="/admin"
             element={
               <ProtectedRoute>
                 <AdminPanel />
               </ProtectedRoute>
-            } 
+            }
           />
-          
+
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </main>
+      </div>
       <Footer />
     </div>
   );

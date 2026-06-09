@@ -40,10 +40,35 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
+    // Evento focus: si el usuario vuelve a la pestaña después de un rato de inactividad,
+    // forzamos la actualización de la sesión y perfil únicamente si el JWT está próximo a expirar (< 5 minutos).
+    const handleFocus = async () => {
+      if (!isMounted) return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        
+        const expiresAt = session.expires_at; // unix timestamp en segundos
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        if (expiresAt - currentTime < 300) {
+          const { data: { user: refreshedUser } } = await supabase.auth.getUser();
+          if (refreshedUser) {
+            await fetchProfile(refreshedUser);
+          }
+        }
+      } catch (err) {
+        console.error("Error al refrescar sesión en focus:", err);
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+
     return () => {
       isMounted = false;
       clearTimeout(timeoutId);
       subscription?.unsubscribe();
+      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 
@@ -129,8 +154,15 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (authUser) {
+      await fetchProfile(authUser);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, loginWithGoogle, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, loginWithGoogle, register, logout, refreshUser, loading }}>
       {loading ? (
         <div className="min-h-screen pt-24 px-6 flex items-center justify-center text-white text-2xl">
           Conectando con Supabase...
