@@ -22,22 +22,28 @@ export const AuthProvider = ({ children }) => {
       }
     }, 2000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!isMounted) return;
       
-      try {
-        if (session?.user) {
-          await fetchProfile(session.user);
-        } else {
-          setUser(null);
+      // Ejecutar en setTimeout para liberar el Lock de GoTrue/Supabase de inmediato
+      // y evitar deadlocks cuando la app hace consultas a la base de datos al inicializar.
+      setTimeout(async () => {
+        try {
+          if (session?.user) {
+            await fetchProfile(session.user);
+          } else {
+            setUser(null);
+          }
+        } catch (err) {
+          console.error("Error al actualizar estado de sesión:", err);
+        } finally {
+          if (isMounted) {
+            initialLoadDone = true;
+            setLoading(false);
+            clearTimeout(timeoutId);
+          }
         }
-      } catch (err) {
-        console.error("Error al actualizar estado de sesión:", err);
-      } finally {
-        initialLoadDone = true;
-        setLoading(false);
-        clearTimeout(timeoutId);
-      }
+      }, 0);
     });
 
     // Evento focus: si el usuario vuelve a la pestaña después de un rato de inactividad,
@@ -111,6 +117,10 @@ export const AuthProvider = ({ children }) => {
       password,
     });
     if (error) throw error;
+    
+    if (data?.user) {
+      await fetchProfile(data.user);
+    }
     return true;
   };
 
@@ -134,6 +144,8 @@ export const AuthProvider = ({ children }) => {
         ]);
         
       if (profileError) throw profileError;
+      
+      await fetchProfile(authData.user);
     }
     return true;
   };
