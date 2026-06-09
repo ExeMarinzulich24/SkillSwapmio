@@ -13,7 +13,7 @@ const Home = () => {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-pink-600/20 rounded-full blur-[120px] pointer-events-none" />
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -23,14 +23,14 @@ const Home = () => {
           <Sparkles size={16} className="text-purple-400" />
           <span className="text-sm font-medium text-purple-200">El poder del conocimiento compartido</span>
         </div>
-        
+
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8">
           Aprende y Enseña <br />
           <span className="text-gradient">Sin Usar Dinero</span>
         </h1>
-        
+
         <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
-          SkillSwap te permite conectar con una comunidad dispuesta a intercambiar habilidades. 
+          SkillSwap te permite conectar con una comunidad dispuesta a intercambiar habilidades.
           Ofrece lo que sabes hacer y aprende lo que siempre quisiste, de forma colaborativa y gratuita.
         </p>
 
@@ -62,11 +62,11 @@ const Home = () => {
       </motion.div>
 
       {/* Stats/Features simple section below */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.8 }}
-        className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full z-10"
+        className="mt-24 mb-20 lg:mb-32 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full z-1"
       >
         {[
           { title: "+500", desc: "Usuarios activos" },
