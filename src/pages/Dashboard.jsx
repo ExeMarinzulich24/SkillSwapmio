@@ -579,16 +579,22 @@ const Dashboard = () => {
 
   const fetchMySkills = async () => {
     setLoadingSkills(true);
-    const { data, error } = await supabase
-      .from('skills')
-      .select('*')
-      .eq('owner_id', user.id)
-      .order('created_at', { ascending: false });
-    
-    if (data) {
-      setMySkills(data);
+    try {
+      const { data, error } = await supabase
+        .from('skills')
+        .select('*')
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      if (data) {
+        setMySkills(data);
+      }
+    } catch (err) {
+      console.error("Error fetching my skills:", err);
+    } finally {
+      setLoadingSkills(false);
     }
-    setLoadingSkills(false);
   };
 
   const handlePublishSubmit = async (e) => {

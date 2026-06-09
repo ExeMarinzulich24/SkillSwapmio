@@ -38,17 +38,24 @@ const Catalog = () => {
 
   useEffect(() => {
     const fetchSkills = async () => {
-      const { data, error } = await supabase
-        .from('skills')
-        .select(`
-          *,
-          owner:profiles(id, name, city, reviews:reviews!reviewee_id(rating))
-        `);
-      
-      if (data) {
-        setSkills(data);
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('skills')
+          .select(`
+            *,
+            owner:profiles(id, name, city, reviews:reviews!reviewee_id(rating))
+          `);
+        
+        if (error) throw error;
+        if (data) {
+          setSkills(data);
+        }
+      } catch (err) {
+        console.error("Error al cargar habilidades del catálogo:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchSkills();
   }, []);
@@ -201,7 +208,11 @@ const Catalog = () => {
           )}
         </AnimatePresence>
 
-        {filteredSkills.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-20 bg-dark-card/50 rounded-2xl border border-glass-border">
+            <p className="text-gray-400 text-lg animate-pulse">Cargando habilidades...</p>
+          </div>
+        ) : filteredSkills.length === 0 ? (
           <div className="text-center py-20 bg-dark-card/50 rounded-2xl border border-glass-border">
             <p className="text-gray-400 text-lg">No hay habilidades que coincidan con tu búsqueda.</p>
           </div>
