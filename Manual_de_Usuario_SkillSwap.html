@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>SkillSwap - Manual de Usuario</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      --primary: #7c3aed;
+      --primary-light: #f5f3ff;
+      --primary-dark: #6d28d9;
+      --secondary: #4f46e5;
+      --text-dark: #1f2937;
+      --text-muted: #4b5563;
+      --text-light: #9ca3af;
+      --bg-light: #f9fafb;
+      --border-color: #e5e7eb;
+      --success: #10b981;
+      --success-light: #ecfdf5;
+      --warning: #f59e0b;
+      --warning-light: #fffbeb;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-dark);
+      line-height: 1.5;
+      font-size: 14.5px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Page container */
+    .page {
+      background: white;
+      width: 210mm;
+      height: 297mm;
+      margin: 30px auto;
+      padding: 20mm;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      color: var(--text-light);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .page-header-logo {
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .page-content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .page-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      color: var(--text-light);
+      border-top: 1px solid var(--border-color);
+      padding-top: 8px;
+      margin-top: 20px;
+    }
+
+    .page-num {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    /* Cover Page Specifics */
+    .cover-page {
+      background: linear-gradient(135deg, #1e1b4b 0%, #311042 50%, #111827 100%);
+      color: white;
+      justify-content: space-between;
+      padding: 30mm 20mm 20mm 20mm;
+    }
+
+    .cover-page::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      right: -10%;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.35) 0%, transparent 70%);
+      filter: blur(50px);
+      z-index: 1;
+    }
+
+    .cover-page::after {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      left: -10%;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(circle, rgba(79, 70, 229, 0.25) 0%, transparent 70%);
+      filter: blur(50px);
+      z-index: 1;
+    }
+
+    .cover-header {
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .cover-logo {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 34px;
+      background: linear-gradient(to right, #a78bfa, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cover-logo-icon {
+      width: 34px;
+      height: 34px;
+      fill: none;
+      stroke: #a78bfa;
+      stroke-width: 2.5;
+    }
+
+    .cover-badge {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 16px;
+      border-radius: 50px;
+      letter-spacing: 1px;
+    }
+
+    .cover-body {
+      z-index: 2;
+      margin: auto 0;
+      max-width: 100%;
+    }
+
+    .cover-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 48px;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      background: linear-gradient(to bottom right, #ffffff, #e0e7ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1.5px;
+    }
+
+    .cover-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: 18px;
+      font-weight: 300;
+      color: #c7d2fe;
+      line-height: 1.5;
+    }
+
+    .cover-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px 40px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 30px;
+      z-index: 2;
+      width: 100%;
+    }
+
+    .meta-item h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      color: #818cf8;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .meta-item p {
+      font-size: 13px;
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    /* Back Cover Specifics */
+    .back-cover {
+      background: linear-gradient(135deg, #111827 0%, #1e1b4b 50%, #311042 100%);
+      color: white;
+      justify-content: space-between;
+      padding: 30mm 20mm 20mm 20mm;
+      text-align: center;
+    }
+
+    .back-cover::before {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      right: -10%;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.25) 0%, transparent 70%);
+      filter: blur(50px);
+      z-index: 1;
+    }
+
+    .back-cover-body {
+      margin: auto 0;
+      z-index: 2;
+    }
+
+    .back-cover-logo {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 32px;
+      color: white;
+      margin-bottom: 25px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-cover-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 36px;
+      margin-bottom: 15px;
+      background: linear-gradient(to right, #ffffff, #c7d2fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .back-cover-text {
+      font-size: 15px;
+      color: #c7d2fe;
+      max-width: 480px;
+      margin: 0 auto;
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    .back-cover-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 25px;
+      font-size: 11px;
+      color: #9ca3af;
+      z-index: 2;
+    }
+
+    /* Headings */
+    h1, h2, h3, h4 {
+      font-family: 'Outfit', sans-serif;
+      color: #1e1b4b;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: #1e1b4b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 20px;
+      background-color: var(--primary);
+      border-radius: 4px;
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 15px 0 10px 0;
+      color: var(--primary-dark);
+    }
+
+    p {
+      margin-bottom: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background: var(--bg-light);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px 20px;
+    }
+
+    .toc-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13.5px;
+      text-decoration: none;
+      color: var(--text-dark);
+      padding: 6px 10px;
+      border-radius: 6px;
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    .toc-item:hover {
+      background-color: var(--primary-light);
+      color: var(--primary);
+      border-bottom-color: transparent;
+    }
+
+    .toc-name {
+      font-weight: 500;
+    }
+
+    .toc-num {
+      font-weight: 600;
+      color: var(--primary);
+      background: white;
+      padding: 1px 6px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      font-size: 11px;
+    }
+
+    /* Steps */
+    .steps-container {
+      margin: 10px 0;
+    }
+
+    .step-card {
+      display: flex;
+      gap: 15px;
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .step-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 6px rgba(124, 58, 237, 0.15);
+    }
+
+    .step-content {
+      flex-grow: 1;
+    }
+
+    .step-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 14.5px;
+      color: #1e1b4b;
+      margin-bottom: 4px;
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* Tables */
+    .custom-table-container {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 15px 0;
+      box-shadow: var(--shadow);
+    }
+
+    .fields-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .fields-table th {
+      background-color: var(--primary);
+      color: white;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      padding: 10px 14px;
+    }
+
+    .fields-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-muted);
+    }
+
+    .fields-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .fields-table tr:nth-child(even) {
+      background-color: var(--bg-light);
+    }
+
+    .field-name {
+      font-weight: 600;
+      color: var(--text-dark);
+      width: 28%;
+    }
+
+    /* Callout Box */
+    .callout {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+
+    .callout-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .callout-content {
+      font-size: 13px;
+      margin: 0;
+    }
+
+    .callout-content p {
+      margin-bottom: 0;
+    }
+
+    .callout-tip {
+      background-color: var(--primary-light);
+      border-left: 4px solid var(--primary);
+      color: #3b0764;
+    }
+
+    .callout-warning {
+      background-color: var(--warning-light);
+      border-left: 4px solid var(--warning);
+      color: #7c2d12;
+    }
+
+    /* Screenshots */
+    .screenshot-container {
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 6px;
+      margin: 15px auto;
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding-bottom: 6px;
+      padding-left: 5px;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 6px;
+    }
+
+    .browser-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background-color: #f87171; }
+    .dot-yellow { background-color: #fbbf24; }
+    .dot-green { background-color: #34d399; }
+
+    .browser-url {
+      background-color: white;
+      border-radius: 3px;
+      font-size: 10px;
+      color: var(--text-light);
+      padding: 1px 12px;
+      flex-grow: 1;
+      margin-left: 10px;
+      margin-right: 40px;
+      text-align: left;
+      border: 1px solid #e5e7eb;
+      font-family: monospace;
+    }
+
+    .screenshot-img {
+      width: 100%;
+      max-height: 250px;
+      object-fit: contain;
+      border-radius: 4px;
+      display: block;
+      border: 1px solid #e5e7eb;
+      background-color: #1e1e1e; /* Dark background matching app screenshots */
+    }
+
+    .screenshot-caption {
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* FAQ and Glossary */
+    .faq-block {
+      margin-bottom: 15px;
+    }
+
+    .faq-question {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 14.5px;
+      color: var(--primary-dark);
+      margin-bottom: 4px;
+    }
+
+    .faq-answer {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .glossary-block {
+      margin-bottom: 15px;
+    }
+
+    .glossary-term {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 14.5px;
+      color: #1e1b4b;
+      margin-bottom: 2px;
+    }
+
+    .glossary-definition {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Print settings override */
+    @media print {
+      html, body {
+        background-color: white;
+      }
+      .page {
+        margin: 0;
+        box-shadow: none;
+        page-break-after: always;
+        page-break-inside: avoid;
+        height: 100vh;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PAGE 1: COVER PAGE -->
+  <div class="page cover-page">
+    <div class="cover-header">
+      <div class="cover-logo">
+        <svg class="cover-logo-icon" viewBox="0 0 24 24">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        SkillSwap
+      </div>
+      <div class="cover-badge">Manual de Usuario</div>
+    </div>
+
+    <div class="cover-body">
+      <h1 class="cover-title">Guía Visual de Uso de SkillSwap</h1>
+      <p class="cover-subtitle">Aprende, enseña y comparte habilidades con tu comunidad de manera colaborativa, sin transacciones monetarias y utilizando créditos de tiempo.</p>
+    </div>
+
+    <div class="cover-meta-grid">
+      <div class="meta-item">
+        <h4>Institución</h4>
+        <p>Instituto de Formación Técnica Superior N°19</p>
+      </div>
+      <div class="meta-item">
+        <h4>Materia</h4>
+        <p>Taller III - Trabajo Práctico Integrador</p>
+      </div>
+      <div class="meta-item">
+        <h4>Integrantes</h4>
+        <p>Judith R. Davalos G. – Ezequiel Marinzulich</p>
+      </div>
+      <div class="meta-item">
+        <h4>Profesor & Fecha</h4>
+        <p>Prof. Gustavo Roncoroni — 23/06/2026</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: TABLE OF CONTENTS -->
+  <div class="page">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Manual de Usuario</span>
+    </div>
+    <div class="page-content">
+      <h1>Contenido del Manual</h1>
+      <p style="margin-bottom: 20px;">Esta guía está estructurada en capítulos lógicos para facilitar el aprendizaje y el dominio de todas las herramientas provistas por la plataforma SkillSwap.</p>
+      
+      <div class="toc-card">
+        <div class="toc-grid">
+          <a href="#cap1" class="toc-item"><span class="toc-name">1. Introducción</span><span class="toc-num">Cap. 1</span></a>
+          <a href="#cap2" class="toc-item"><span class="toc-name">2. Acceso al Sistema</span><span class="toc-num">Cap. 2</span></a>
+          <a href="#cap3" class="toc-item"><span class="toc-name">3. Registro de Usuario</span><span class="toc-num">Cap. 3</span></a>
+          <a href="#cap4" class="toc-item"><span class="toc-name">4. Inicio de Sesión</span><span class="toc-num">Cap. 4</span></a>
+          <a href="#cap5" class="toc-item"><span class="toc-name">5. Navegación General</span><span class="toc-num">Cap. 5</span></a>
+          <a href="#cap6" class="toc-item"><span class="toc-name">6. Gestión de Perfil</span><span class="toc-num">Cap. 6</span></a>
+          <a href="#cap7" class="toc-item"><span class="toc-name">7. Gestión de Habilidades - Publicar</span><span class="toc-num">Cap. 7-1</span></a>
+          <a href="#cap7-2" class="toc-item"><span class="toc-name">8. Gestión de Habilidades - Buscar</span><span class="toc-num">Cap. 7-2</span></a>
+          <a href="#cap8" class="toc-item"><span class="toc-name">9. Intercambios y Solicitudes</span><span class="toc-num">Cap. 8-1</span></a>
+          <a href="#cap8-2" class="toc-item"><span class="toc-name">10. Mis Intercambios (Calendario)</span><span class="toc-num">Cap. 8-2</span></a>
+          <a href="#cap9" class="toc-item"><span class="toc-name">11. Sistema de Mensajería (Chat)</span><span class="toc-num">Cap. 9</span></a>
+          <a href="#cap10" class="toc-item"><span class="toc-name">12. Paneles de Gestión (Admin/Mod)</span><span class="toc-num">Cap. 10/11</span></a>
+          <a href="#cap12" class="toc-item"><span class="toc-name">13. Preguntas Frecuentes (FAQ)</span><span class="toc-num">Cap. 12</span></a>
+          <a href="#cap13" class="toc-item"><span class="toc-name">14. Glosario y Referencias</span><span class="toc-num">Cap. 13</span></a>
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">💡</span>
+        <div class="callout-content">
+          <p><strong>Concepto Clave: Banco de Tiempo</strong>. SkillSwap opera bajo el concepto de banco de tiempo: prestas una hora de tu tiempo enseñando algo que dominas, y a cambio obtienes un "crédito de tiempo" que puedes canjear por una hora de clase de cualquier otra habilidad ofrecida por otro miembro de la comunidad.</p>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 2</span>
+    </div>
+  </div>
+
+  <!-- PAGE 3: CAP 1 - INTRODUCCION -->
+  <div class="page" id="cap1">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 1 – Introducción</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulo 1 – Introducción</h2>
+      <p><strong>SkillSwap</strong> es una plataforma web colaborativa diseñada para conectar a personas interesadas en intercambiar conocimientos, habilidades y experiencias sin necesidad de realizar transacciones comerciales o usar dinero físico.</p>
+      <p>Nuestra misión es democratizar el aprendizaje facilitando un ecosistema donde el conocimiento es la moneda de cambio. A través de un sistema justo de <strong>créditos de tiempo</strong>, cada hora dedicada a enseñar a otros se traduce en créditos que puedes utilizar para aprender lo que tú quieras.</p>
+      
+      <h3>Objetivo del Manual</h3>
+      <p>Este documento sirve como guía oficial interactiva paso a paso para orientar a los usuarios y administradores en el uso cotidiano de la interfaz, asegurando una experiencia fluida desde el registro inicial hasta la concreción de intercambios complejos.</p>
+
+      <h3>Público Objetivo</h3>
+      <div class="steps-container">
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge" style="background:#4f46e5">U</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size: 13.5px;">Usuarios finales</h4>
+            <p class="step-desc" style="font-size: 12px;">Personas que desean publicar sus habilidades, buscar mentores, coordinar clases y enviar mensajes en la plataforma.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge" style="background:#059669">M</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size: 13.5px;">Moderadores</h4>
+            <p class="step-desc" style="font-size: 12px;">Responsables de verificar el comportamiento cívico y regular el catálogo general de habilidades.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 0px;">
+          <div class="step-badge" style="background:#b91c1c">A</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size: 13.5px;">Administradores</h4>
+            <p class="step-desc" style="font-size: 12px;">Personal técnico con control completo sobre los perfiles de usuario, roles de la plataforma y configuraciones globales.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 3</span>
+    </div>
+  </div>
+
+  <!-- PAGE 4: CAP 2 - ACCESO AL SISTEMA -->
+  <div class="page" id="cap2">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 2 - Acceso al Sistema</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulo 2 - Acceso al Sistema</h2>
+      <p>El ingreso a SkillSwap se realiza completamente desde la web, siendo compatible con los navegadores modernos tanto en computadoras de escritorio como en dispositivos móviles.</p>
+      
+      <h3>Pasos para el ingreso</h3>
+      <div class="steps-container">
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Abrir el Navegador</h4>
+            <p class="step-desc" style="font-size:12px;">Utiliza un navegador moderno como Google Chrome, Mozilla Firefox, Safari o Microsoft Edge.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Ingresar la dirección URL</h4>
+            <p class="step-desc" style="font-size:12px;">Escribe la URL correspondiente del sistema (ej. <code>https://skillswapifts.netlify.app</code>) y presiona Enter.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Visualizar la Pantalla Principal</h4>
+            <p class="step-desc" style="font-size:12px;">Una vez cargada, visualizarás la página de bienvenida con las opciones de exploración y el acceso a la cuenta.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="screenshot-container" style="margin: 10px auto;">
+        <div class="browser-bar">
+          <div class="browser-dot dot-red"></div>
+          <div class="browser-dot dot-yellow"></div>
+          <div class="browser-dot dot-green"></div>
+          <div class="browser-url">https://skillswapifts.netlify.app/</div>
+        </div>
+        <img class="screenshot-img" src="public/manual_images_named/landing_page.png" alt="Pantalla de inicio de SkillSwap">
+        <div class="screenshot-caption" style="margin-top: 5px;">Figura 1: Pantalla principal de bienvenida a la plataforma SkillSwap.</div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 4</span>
+    </div>
+  </div>
+
+  <!-- PAGE 5: CAP 3 - REGISTRO DE USUARIO -->
+  <div class="page" id="cap3">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 3 - Registro de Usuario</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulo 3 - Registro de Usuario</h2>
+      <p>Para comenzar a publicar y solicitar intercambios, es necesario crear una cuenta personal. Este proceso es rápido y gratuito.</p>
+      
+      <h3>Pasos para registrarse</h3>
+      <div class="steps-container">
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Hacer clic en "Registrarse"</h4>
+            <p class="step-desc" style="font-size:11.5px;">Haz clic en el botón violeta "Registrarse" en la barra superior o en el centro de la pantalla principal.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Completar el Formulario</h4>
+            <p class="step-desc" style="font-size:11.5px;">Llena tus datos reales: Nombre, Apellido, Email, Contraseña, Ciudad y tu interés principal.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Presionar "Registrarme"</h4>
+            <p class="step-desc" style="font-size:11.5px;">Envía el formulario haciendo clic en "Registrarme" o regístrate rápidamente con tu cuenta de Google.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="screenshot-container" style="margin: 5px auto;">
+        <div class="browser-bar">
+          <div class="browser-dot dot-red"></div>
+          <div class="browser-dot dot-yellow"></div>
+          <div class="browser-dot dot-green"></div>
+          <div class="browser-url">https://skillswapifts.netlify.app/register</div>
+        </div>
+        <img class="screenshot-img" src="public/manual_images_named/signup_form.png" alt="Formulario de creación de cuenta">
+        <div class="screenshot-caption" style="margin-top: 4px;">Figura 2: Formulario interactivo para la creación de una cuenta en la comunidad.</div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 5</span>
+    </div>
+  </div>
+
+  <!-- PAGE 6: CAP 3 - DETALLE DE CAMPOS -->
+  <div class="page">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 3 - Registro (Campos)</span>
+    </div>
+    <div class="page-content">
+      <h2>Detalle de Campos del Registro</h2>
+      <p>Al completar el registro, ten en cuenta el propósito y obligatoriedad de cada uno de los campos solicitados:</p>
+
+      <div class="custom-table-container">
+        <table class="fields-table">
+          <thead>
+            <tr>
+              <th>Campo</th>
+              <th>Descripción</th>
+              <th>Requisito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="field-name">Nombre</td>
+              <td>Tu nombre de pila real para facilitar el trato personal.</td>
+              <td>Requerido</td>
+            </tr>
+            <tr>
+              <td class="field-name">Apellido</td>
+              <td>Tu apellido familiar real.</td>
+              <td>Requerido</td>
+            </tr>
+            <tr>
+              <td class="field-name">Email</td>
+              <td>Correo electrónico válido (será verificado e identifica tu cuenta).</td>
+              <td>Requerido / Único</td>
+            </tr>
+            <tr>
+              <td class="field-name">Contraseña</td>
+              <td>Clave de seguridad de acceso (mínimo 6 caracteres).</td>
+              <td>Requerido</td>
+            </tr>
+            <tr>
+              <td class="field-name">Ciudad</td>
+              <td>Localidad de residencia. Permite filtrar búsquedas locales.</td>
+              <td>Opcional</td>
+            </tr>
+            <tr>
+              <td class="field-name">Categoría de Interés</td>
+              <td>El área principal sobre la cual te gustaría recibir clases.</td>
+              <td>Requerido (Selección)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">💡</span>
+        <div class="callout-content">
+          <p><strong>Resultado Esperado:</strong> Una vez enviado el formulario, se creará tu perfil en la base de datos de forma segura mediante Supabase, y el sistema te redirigirá automáticamente a tu Panel de Usuario con un saldo inicial de 5 créditos de tiempo.</p>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 6</span>
+    </div>
+  </div>
+
+  <!-- PAGE 7: CAP 4 - INICIO DE SESION -->
+  <div class="page" id="cap4">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 4 - Inicio de Sesión</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulo 4 - Inicio de Sesión</h2>
+      <p>Si ya posees una cuenta registrada, puedes acceder rápidamente utilizando tus credenciales de inicio de sesión.</p>
+      
+      <h3>Pasos para el Inicio de Sesión</h3>
+      <div class="steps-container">
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Seleccionar "Iniciar Sesión"</h4>
+            <p class="step-desc" style="font-size:12px;">Haz clic en el enlace "Iniciar Sesión" en la barra superior de navegación.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Ingresar credenciales</h4>
+            <p class="step-desc" style="font-size:12px;">Escribe el correo electrónico y la clave con los que te registraste en los campos correspondientes.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Presionar "Ingresar"</h4>
+            <p class="step-desc" style="font-size:12px;">Presiona el botón "Ingresar" para validar las credenciales. También puedes hacer clic en "Google" para el inicio automático.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="screenshot-container" style="margin: 10px auto;">
+        <div class="browser-bar">
+          <div class="browser-dot dot-red"></div>
+          <div class="browser-dot dot-yellow"></div>
+          <div class="browser-dot dot-green"></div>
+          <div class="browser-url">https://skillswapifts.netlify.app/login</div>
+        </div>
+        <img class="screenshot-img" src="public/manual_images_named/login_form.png" alt="Formulario de inicio de sesión">
+        <div class="screenshot-caption" style="margin-top: 5px;">Figura 3: Pantalla de inicio de sesión con validación de credenciales seguras.</div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 7</span>
+    </div>
+  </div>
+
+  <!-- PAGE 8: CAP 5 - NAVEGACION GENERAL -->
+  <div class="page" id="cap5">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 5 - Navegación General</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulo 5 - Navegación General</h2>
+      <p>Una vez dentro de la sesión, la interfaz te proporciona acceso inmediato a todas las herramientas del sistema a través de un panel unificado.</p>
+      
+      <h3>El Menú de Navegación Lateral y Superior</h3>
+      <p>Las opciones de navegación varían según el contexto de tu cuenta, organizadas de la siguiente manera:</p>
+
+      <div class="steps-container">
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge" style="background:#7c3aed">IN</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Inicio / Dashboard</h4>
+            <p class="step-desc" style="font-size:11.5px;">Muestra tu perfil, tu saldo de créditos de tiempo y tus notificaciones activas.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge" style="background:#4f46e5">EX</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Explorar Catálogo</h4>
+            <p class="step-desc" style="font-size:11.5px;">Buscador global de habilidades publicadas por otros miembros.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge" style="background:#db2777">SR</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Solicitudes Recibidas</h4>
+            <p class="step-desc" style="font-size:11.5px;">Bandeja con propuestas de clases enviadas por otros usuarios para aceptar/rechazar.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge" style="background:#059669">MI</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Mis Intercambios</h4>
+            <p class="step-desc" style="font-size:11.5px;">Calendario mensual con tus clases confirmadas y programadas.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="screenshot-container" style="margin: 5px auto;">
+        <div class="browser-bar">
+          <div class="browser-dot dot-red"></div>
+          <div class="browser-dot dot-yellow"></div>
+          <div class="browser-dot dot-green"></div>
+          <div class="browser-url">https://skillswapifts.netlify.app/dashboard</div>
+        </div>
+        <img class="screenshot-img" src="public/manual_images_named/exchange_requests.png" alt="Panel de solicitudes recibidas">
+        <div class="screenshot-caption" style="margin-top: 4px;">Figura 4: Panel principal (Dashboard) mostrando la sección de Solicitudes Recibidas y el resumen de perfil.</div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 8</span>
+    </div>
+  </div>
+
+  <!-- PAGE 9: CAP 6 - GESTION DE PERFIL -->
+  <div class="page" id="cap6">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 6 - Gestión de Perfil</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulo 6 - Gestión de Perfil</h2>
+      <p>Tu perfil es tu carta de presentación ante la comunidad. Mantenerlo actualizado genera confianza y facilita los intercambios.</p>
+      
+      <h3>Pasos para Visualizar y Editar tu Perfil</h3>
+      <div class="steps-container">
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Ingresar a Ajustes de Perfil</h4>
+            <p class="step-desc" style="font-size:11.5px;">En tu tarjeta de perfil (columna izquierda del panel), haz clic en el icono del engranaje junto a tu avatar.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Modificar tus datos</h4>
+            <p class="step-desc" style="font-size:11.5px;">Se abrirá una ventana emergente ("Ajustes de Perfil"). Podrás editar tu Nombre, Apellido, Ubicación y elegir entre avatares prediseñados o pegar el enlace a una foto personalizada.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Cambiar Contraseña y Guardar</h4>
+            <p class="step-desc" style="font-size:11.5px;">Si lo deseas, escribe una nueva clave de acceso en los campos de cambio. Para aplicar todos los ajustes, haz clic en el botón violeta "Guardar Ajustes".</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="screenshot-container" style="margin: 5px auto;">
+        <div class="browser-bar">
+          <div class="browser-dot dot-red"></div>
+          <div class="browser-dot dot-yellow"></div>
+          <div class="browser-dot dot-green"></div>
+          <div class="browser-url">https://skillswapifts.netlify.app/profile/settings</div>
+        </div>
+        <img class="screenshot-img" src="public/manual_images_named/edit_profile.png" alt="Modal de edición de perfil">
+        <div class="screenshot-caption" style="margin-top: 4px;">Figura 5: Ventana emergente interactiva para actualizar la información de perfil y cambiar el avatar del usuario.</div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 9</span>
+    </div>
+  </div>
+
+  <!-- PAGE 10: CAP 7-1 - PUBLICAR HABILIDAD -->
+  <div class="page" id="cap7">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 7 - Gestión de Habilidades</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulo 7 - Publicar una Habilidad</h2>
+      <p>El núcleo de SkillSwap es publicar lo que sabes hacer para compartirlo con la comunidad.</p>
+      
+      <h3>Pasos para Publicar Habilidades</h3>
+      <div class="steps-container">
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Abrir Formulario de Publicación</h4>
+            <p class="step-desc" style="font-size:12px;">Haz clic en el botón "+ Publicar Habilidad" en tu tarjeta de perfil o en "Publicar Habilidad" en tu menú de navegación lateral.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Completar el Formulario</h4>
+            <p class="step-desc" style="font-size:12px;">Ingresa un título claro, descripción detallada del curso, selecciona la categoría, el nivel (básico/medio/avanzado), modalidad (virtual/presencial) y disponibilidad de horarios.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Confirmar Publicación</h4>
+            <p class="step-desc" style="font-size:12px;">Presiona el botón violeta "Publicar Habilidad" al final de la ventana emergente. Se guardará de inmediato y estará visible en el catálogo público global.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="screenshot-container" style="margin: 10px auto;">
+        <div class="browser-bar">
+          <div class="browser-dot dot-red"></div>
+          <div class="browser-dot dot-yellow"></div>
+          <div class="browser-dot dot-green"></div>
+          <div class="browser-url">https://skillswapifts.netlify.app/skills/new</div>
+        </div>
+        <img class="screenshot-img" src="public/manual_images_named/add_skill_form.png" alt="Formulario de creación de habilidades">
+        <div class="screenshot-caption" style="margin-top: 5px;">Figura 6: Modal interactivo para publicar una nueva habilidad en el catálogo comunitario.</div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 10</span>
+    </div>
+  </div>
+
+  <!-- PAGE 11: CAP 7-2 - BUSCAR HABILIDADES -->
+  <div class="page" id="cap7-2">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 7 - Explorar Catálogo</span>
+    </div>
+    <div class="page-content">
+      <h2>Buscar Habilidades en Explorar</h2>
+      <p>Cuando desees aprender algo nuevo, dirígete al menú <strong>"Explorar"</strong> para buscar entre las publicaciones disponibles de la comunidad.</p>
+      
+      <h3>Pasos para la Búsqueda y Selección</h3>
+      <div class="steps-container">
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Navegar a "Explorar"</h4>
+            <p class="step-desc" style="font-size:12px;">Haz clic en el enlace "Explorar" para visualizar el catálogo público de habilidades, presentadas en un diseño de tarjetas dinámicas.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Aplicar filtros y Búsqueda</h4>
+            <p class="step-desc" style="font-size:12px;">Escribe una palabra clave en la barra de búsqueda (ej. "Inglés") o utiliza el menú de categorías y filtros avanzados (modalidad, nivel) para acotar los resultados.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Seleccionar una Habilidad</h4>
+            <p class="step-desc" style="font-size:12px;">Haz clic en la tarjeta de tu interés. Podrás ver los detalles específicos, la ubicación del docente y su reputación.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="screenshot-container" style="margin: 10px auto;">
+        <div class="browser-bar">
+          <div class="browser-dot dot-red"></div>
+          <div class="browser-dot dot-yellow"></div>
+          <div class="browser-dot dot-green"></div>
+          <div class="browser-url">https://skillswapifts.netlify.app/explore</div>
+        </div>
+        <img class="screenshot-img" src="public/manual_images_named/skill_catalog.png" alt="Catálogo público de habilidades">
+        <div class="screenshot-caption" style="margin-top: 5px;">Figura 7: Catálogo de habilidades con tarjetas informativas y herramientas de búsqueda avanzada.</div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 11</span>
+    </div>
+  </div>
+
+  <!-- PAGE 12: CAP 8-1 - SOLICITAR INTERCAMBIO -->
+  <div class="page" id="cap8">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 8 - Solicitar Intercambio</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulo 8 - Solicitar un Intercambio</h2>
+      <p>Una vez localizada la habilidad deseada en el catálogo, puedes entablar la propuesta de intercambio.</p>
+      
+      <h3>Pasos para la Solicitud</h3>
+      <div class="steps-container">
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Hacer clic en "Solicitar Intercambio"</h4>
+            <p class="step-desc" style="font-size:12px;">En la tarjeta detallada de la habilidad seleccionada en el catálogo, presiona el botón para abrir el formulario de contacto.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Escribir un Mensaje</h4>
+            <p class="step-desc" style="font-size:12px;">Redacta un mensaje presentándote, explicando por qué te interesa aprender la habilidad y sugiriendo fechas y horarios probables.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Confirmar y Esperar</h4>
+            <p class="step-desc" style="font-size:12px;">Presiona enviar. El sistema registrará la propuesta y enviará una notificación al profesor en su sección "Solicitudes Recibidas". En ese momento, la solicitud quedará en estado "Pendiente".</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <span class="callout-icon">⚠️</span>
+        <div class="callout-content">
+          <p><strong>Bloqueo Temporal de Crédito:</strong> Al enviar una solicitud de intercambio, se pre-reserva 1 crédito de tiempo de tu cuenta. Si el profesor acepta, el crédito se transfiere definitivamente; si rechaza o cancela la solicitud, el crédito se devuelve inmediatamente a tu saldo disponible.</p>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 12</span>
+    </div>
+  </div>
+
+  <!-- PAGE 13: CAP 8-2 - CALENDARIO -->
+  <div class="page" id="cap8-2">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 8 - Mis Intercambios</span>
+    </div>
+    <div class="page-content">
+      <h2>Calendario de Clases y Detalle</h2>
+      <p>Una vez confirmada la solicitud, el intercambio se agenda de manera visual en el calendario de la sección "Mis Intercambios".</p>
+      
+      <h3>Uso del Calendario Interactivo</h3>
+      <div class="steps-container">
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Identificar las Clases por Color</h4>
+            <p class="step-desc" style="font-size:11.5px;">Los días con actividades agendadas muestran un marcador indicador de color:</p>
+            <ul style="margin-left: 15px; font-size: 11px; margin-top: 3px; color: var(--text-muted);">
+              <li>🟣 <strong>Marcador Violeta</strong>: Clases que dictarás en calidad de <strong>Profesor</strong>.</li>
+              <li>🟢 <strong>Marcador Verde</strong>: Clases que recibirás en calidad de <strong>Alumno</strong>.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Consultar Detalles del Encuentro</h4>
+            <p class="step-desc" style="font-size:11.5px;">Haz clic sobre el día del mes correspondiente en la cuadrícula. Se cargará de inmediato la información en el panel derecho de "Detalle del Día".</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 8px; margin-bottom: 6px;">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13px;">Información Disponible</h4>
+            <p class="step-desc" style="font-size:11.5px;">Se listará el participante (alumno/profesor), fecha formal, horario coordinado, modalidad (presencial/virtual) y el estado del encuentro ("Agendado", "Confirmado" o "Realizado").</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="screenshot-container" style="margin: 5px auto;">
+        <div class="browser-bar">
+          <div class="browser-dot dot-red"></div>
+          <div class="browser-dot dot-yellow"></div>
+          <div class="browser-dot dot-green"></div>
+          <div class="browser-url">https://skillswapifts.netlify.app/exchanges</div>
+        </div>
+        <img class="screenshot-img" src="public/manual_images_named/exchanges_calendar.png" alt="Calendario de intercambios agendados">
+        <div class="screenshot-caption" style="margin-top: 4px;">Figura 8: Interfaz interactiva de Calendario para gestionar días, horarios y detalles de clases agendadas.</div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 13</span>
+    </div>
+  </div>
+
+  <!-- PAGE 14: CAP 9 - MENSAJERIA -->
+  <div class="page" id="cap9">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 9 - Sistema de Mensajería</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulo 9 - Sistema de Mensajería</h2>
+      <p>SkillSwap cuenta con un chat directo en tiempo real que permite establecer la comunicación entre usuarios para afinar detalles de las clases o responder consultas informales.</p>
+      
+      <h3>Pasos para Comunicarse</h3>
+      <div class="steps-container">
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Abrir la Conversación</h4>
+            <p class="step-desc" style="font-size:12px;">En tu panel o desde una tarjeta de solicitud aceptada, haz clic en el botón de chat (icono de burbuja de diálogo) para abrir la conversación con el otro usuario.</p>
+          </div>
+        </div>
+        <div class="step-card" style="padding: 10px; margin-bottom: 8px;">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <h4 class="step-title" style="font-size:13.5px;">Escribir y Enviar</h4>
+            <p class="step-desc" style="font-size:12px;">Redacta tu mensaje en el campo de texto ubicado en la parte inferior del chat. Envía el mensaje pulsando la tecla Enter o haciendo clic en el botón violeta con forma de flecha.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="screenshot-container" style="margin: 10px auto;">
+        <div class="browser-bar">
+          <div class="browser-dot dot-red"></div>
+          <div class="browser-dot dot-yellow"></div>
+          <div class="browser-dot dot-green"></div>
+          <div class="browser-url">https://skillswapifts.netlify.app/messages</div>
+        </div>
+        <img class="screenshot-img" src="public/manual_images_named/chat_messages.png" alt="Pantalla del chat integrado en la web">
+        <div class="screenshot-caption" style="margin-top: 5px;">Figura 9: Sistema de mensajería integrado para la comunicación privada entre alumnos y profesores.</div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 14</span>
+    </div>
+  </div>
+
+  <!-- PAGE 15: CAP 10 & 11 - ADMIN / MODERADOR -->
+  <div class="page" id="cap10">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulos 10 y 11 - Paneles de Gestión</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulos 10 y 11 - Paneles de Gestión</h2>
+      <p>La plataforma cuenta con herramientas de administración para garantizar un entorno seguro y cívico.</p>
+      
+      <h3>1. Panel de Moderación (Capítulo 10)</h3>
+      <p>Los moderadores tienen acceso a herramientas destinadas al control y supervisión del comportamiento diario de los perfiles y publicaciones:</p>
+      <ul style="margin-left: 20px; font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+        <li><strong>Ver Listado de Usuarios</strong>: Permite consultar el listado completo de los usuarios activos.</li>
+        <li><strong>Ver Ubicaciones y Estados</strong>: Analizar la distribución de los usuarios y su estado actual en la plataforma.</li>
+        <li><strong>Suspender Perfiles</strong>: Deshabilitar temporalmente a usuarios que incumplan las normas comunitarias básicas.</li>
+      </ul>
+
+      <h3>2. Panel de Administración (Capítulo 11)</h3>
+      <p>El Administrador del sistema ejerce el máximo nivel de control operativo en SkillSwap:</p>
+      <ul style="margin-left: 20px; font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">
+        <li><strong>Administración Total de Usuarios</strong>: Visualización detallada de registros e ID de usuarios.</li>
+        <li><strong>Cambiar Roles</strong>: Ascender o degradar cuentas de usuarios regulares a Moderadores o Administradores mediante un menú desplegable.</li>
+        <li><strong>Suspender y Reactivar Cuentas</strong>: Bloquear el acceso a cuentas de forma indefinida o rehabilitarlas de nuevo según corresponda.</li>
+      </ul>
+
+      <div class="screenshot-container" style="margin: 5px auto;">
+        <div class="browser-bar">
+          <div class="browser-dot dot-red"></div>
+          <div class="browser-dot dot-yellow"></div>
+          <div class="browser-dot dot-green"></div>
+          <div class="browser-url">https://skillswapifts.netlify.app/admin</div>
+        </div>
+        <img class="screenshot-img" src="public/manual_images_named/admin_dashboard.png" alt="Panel de control administrativo">
+        <div class="screenshot-caption" style="margin-top: 4px;">Figura 10: Interfaz del Panel de Administración para la gestión de usuarios, roles y estados de cuenta.</div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 15</span>
+    </div>
+  </div>
+
+  <!-- PAGE 16: CAP 12 - FAQ -->
+  <div class="page" id="cap12">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 12 - Preguntas Frecuentes</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulo 12 - Preguntas Frecuentes (FAQ)</h2>
+      <p>Respuestas rápidas a los problemas técnicos y operativos más comunes reportados en la plataforma.</p>
+      
+      <div class="faq-block">
+        <div class="faq-question">❓ No puedo iniciar sesión, ¿qué debo hacer?</div>
+        <div class="faq-answer">
+          <ul style="margin-left: 15px; margin-bottom: 5px;">
+            <li>Verifica que hayas escrito el correo electrónico de registro correctamente, sin espacios extra al final.</li>
+            <li>Asegúrate de que la tecla Mayús de tu teclado no esté activada accidentalmente, ya que la contraseña distingue entre mayúsculas y minúsculas.</li>
+            <li>Si continúas con problemas, solicita el restablecimiento de tu contraseña o utiliza la opción de inicio rápido con Google.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="faq-block">
+        <div class="faq-question">❓ No puedo solicitar un intercambio con un usuario, ¿por qué?</div>
+        <div class="faq-answer">
+          <ul style="margin-left: 15px; margin-bottom: 5px;">
+            <li>Verifica si tu propia cuenta se encuentra activa (los perfiles suspendidos no pueden realizar solicitudes).</li>
+            <li>Asegúrate de contar con créditos de tiempo suficientes en tu panel (se requiere al menos 1 crédito de tiempo disponible).</li>
+            <li>El usuario al que deseas contactar puede haber pausado la publicación de su habilidad temporalmente o haber alcanzado el cupo máximo de alumnos.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="faq-block">
+        <div class="faq-question">❓ ¿Cómo adquiero más créditos de tiempo?</div>
+        <div class="faq-answer">
+          <p>Al registrarte, recibes 5 créditos de regalo. Para ganar más, debes dictar clases a otros miembros. Al confirmarse un intercambio donde eres el profesor, el sistema transferirá automáticamente los créditos de tiempo del alumno a tu perfil.</p>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 16</span>
+    </div>
+  </div>
+
+  <!-- PAGE 17: CAP 13 - GLOSARIO & REFERENCIAS -->
+  <div class="page" id="cap13">
+    <div class="page-header">
+      <span class="page-header-logo">SkillSwap</span>
+      <span>Capítulo 13 - Glosario y Referencias</span>
+    </div>
+    <div class="page-content">
+      <h2>Capítulo 13 - Glosario y Referencias</h2>
+      <p>Glosario de términos clave utilizados en la plataforma para facilitar el entendimiento de todos los usuarios.</p>
+
+      <div class="glossary-block">
+        <div class="glossary-term">Habilidad</div>
+        <div class="glossary-definition">Conjunto de conocimientos o destrezas ofrecidos públicamente por un usuario para enseñar a otros miembros de la comunidad de forma altruista o a cambio de créditos.</div>
+      </div>
+
+      <div class="glossary-block">
+        <div class="glossary-term">Intercambio</div>
+        <div class="glossary-definition">Acuerdo mutuamente aceptado entre un alumno y un profesor para coordinar y celebrar una sesión de enseñanza-aprendizaje sobre una habilidad particular.</div>
+      </div>
+
+      <div class="glossary-block">
+        <div class="glossary-term">Crédito de Tiempo</div>
+        <div class="glossary-definition">Unidad de cambio virtual utilizada en la plataforma. Representa una hora dedicada a compartir o recibir conocimientos. No tiene valor monetario real.</div>
+      </div>
+
+      <div class="glossary-block">
+        <div class="glossary-term">Moderador y Administrador</div>
+        <div class="glossary-definition">Usuarios especiales responsables de velar por la seguridad de la información, el cumplimiento de las normas y la administración de la base de datos de usuarios.</div>
+      </div>
+
+      <h3 style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">Referencias de Consulta Externa</h3>
+      <p style="font-size:12.5px;">Si deseas profundizar en las teorías sobre bancos de tiempo o el desarrollo técnico de este tipo de manuales, puedes consultar:</p>
+      <ul style="font-size:12.5px;">
+        <li style="margin-left: 20px; color: var(--text-muted); margin-bottom: 4px;">
+          Guía General sobre Bancos de Tiempo: <a href="https://repositorio.upea.bo/jspui/bitstream/123456789/1258/1/MANUAL_USUARIO%20%281%29.pdf" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;">Manual de Usuario y Ecosistemas UPEA</a>
+        </li>
+        <li style="margin-left: 20px; color: var(--text-muted);">
+          Diseño de Manuales de Sistemas Web: <a href="https://www.ieric.org.ar/wp-content/uploads/2020/01/Manual-de-Usuario-Sistema-Web-1.pdf" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;">Guía de Estructuración e Impresión de IERIC</a>
+        </li>
+      </ul>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SkillSwap</span>
+      <span class="page-num">Página 17</span>
+    </div>
+  </div>
+
+  <!-- PAGE 18: BACK COVER -->
+  <div class="page back-cover">
+    <div>&nbsp;</div>
+    <div class="back-cover-body">
+      <div class="back-cover-logo">
+        <svg class="cover-logo-icon" viewBox="0 0 24 24" style="stroke: #c7d2fe;">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        SkillSwap
+      </div>
+      <h2 class="back-cover-title">¡Gracias por ser parte!</h2>
+      <p class="back-cover-text">El aprendizaje es más enriquecedor cuando es compartido. Comparte tu conocimiento y ayuda a construir una comunidad colaborativa más fuerte.</p>
+    </div>
+    <div class="back-cover-footer">
+      <span>SkillSwap © 2026. Diseñado para el Trabajo Práctico Integrador del IFT N° 19.</span>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -262,7 +262,17 @@ const SkillDetail = () => {
                 </div>
               </div>
 
-              {user && (user.id === skill.owner_id || user.role === 'admin' || user.role === 'moderator') ? (
+              {(!user || user.id !== skill.owner_id) && (
+                <button 
+                  onClick={handleRequest}
+                  className="w-full py-4 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl flex justify-center items-center gap-2 transition-all shadow-lg shadow-purple-900/40"
+                >
+                  <Send size={18} />
+                  Solicitar Intercambio
+                </button>
+              )}
+
+              {user && (user.id === skill.owner_id || user.role === 'admin' || user.role === 'moderator') && (
                 <button 
                   onClick={handleDelete}
                   disabled={isDeleting}
@@ -270,14 +280,6 @@ const SkillDetail = () => {
                 >
                   <AlertCircle size={18} />
                   {isDeleting ? 'Borrando...' : 'Borrar Habilidad'}
-                </button>
-              ) : (
-                <button 
-                  onClick={handleRequest}
-                  className="w-full py-4 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl flex justify-center items-center gap-2 transition-all shadow-lg shadow-purple-900/40"
-                >
-                  <Send size={18} />
-                  Solicitar Intercambio
                 </button>
               )}
             </div>
